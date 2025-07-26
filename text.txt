@@ -1,0 +1,5 @@
+estudia la documentacion oficial:
+https://github.com/modelcontextprotocol/typescript-sdk
+
+Necesito aprender MCP desde 0, no entiendo nada, explica muy bien para un principiante a travez de un ejemplo completo.
+Queiero un servidor y cliente en nodejs con typescript, tengo una api de gtp con la key de mi cuenta de Open AI, utilizala para mi backend se comunique a travez de esa api, crea el front en react con un chat para interactuar, mantener contexto del usuario mientras no se refresque el navegador, conecta a mcp de ejemplo para ver como interactuar y explicarme un ejemplo integral detallado donde me quede claro el uso practico de los MCP.

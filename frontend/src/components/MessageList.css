@@ -1,0 +1,357 @@
+/**
+ * ESTILOS MESSAGE LIST - FRONTEND
+ * 
+ * Estilos para la lista de mensajes del chat
+ * con soporte para código, metadatos y diferentes tipos de mensaje.
+ */
+
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+/* Estado vacío */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--text-secondary, #64748b);
+}
+
+.empty-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+/* Mensaje individual */
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  transition: all 0.2s ease;
+}
+
+.message:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Tipos de mensaje */
+.message.user {
+  background: var(--user-bg, #eff6ff);
+  border-color: var(--user-border, #bfdbfe);
+  margin-left: 2rem;
+}
+
+.message.assistant {
+  background: var(--assistant-bg, #f8fafc);
+  border-color: var(--assistant-border, #e2e8f0);
+  margin-right: 2rem;
+}
+
+.message.error {
+  background: var(--error-bg, #fef2f2);
+  border-color: var(--error-border, #fecaca);
+}
+
+.message.mcp-enhanced {
+  background: var(--mcp-bg, #f0f9ff);
+  border-color: var(--mcp-border, #bae6fd);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.message.loading {
+  opacity: 0.8;
+  background: var(--loading-bg, #f1f5f9);
+}
+
+/* Header del mensaje */
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.message-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--avatar-bg, #e2e8f0);
+  color: var(--avatar-color, #64748b);
+}
+
+.message.user .message-avatar {
+  background: var(--user-avatar-bg, #3b82f6);
+  color: white;
+}
+
+.message.assistant .message-avatar {
+  background: var(--assistant-avatar-bg, #10b981);
+  color: white;
+}
+
+.message-avatar .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.message-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.message-role {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+}
+
+/* Cuerpo del mensaje */
+.message-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.message-text {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-primary, #1e293b);
+  word-wrap: break-word;
+}
+
+/* Bloques de código */
+.code-block {
+  margin: 0.5rem 0;
+  border-radius: 0.5rem;
+  background: var(--code-bg, #1e293b);
+  border: 1px solid var(--code-border, #334155);
+  overflow: hidden;
+}
+
+.code-language {
+  padding: 0.5rem 0.75rem;
+  background: var(--code-header-bg, #334155);
+  color: var(--code-header-text, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 0.75rem;
+  background: transparent;
+  overflow-x: auto;
+}
+
+.code-block code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--code-text, #f1f5f9);
+  line-height: 1.5;
+}
+
+.inline-code {
+  padding: 0.125rem 0.25rem;
+  background: var(--inline-code-bg, #e2e8f0);
+  color: var(--inline-code-text, #1e293b);
+  border-radius: 0.25rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.8em;
+}
+
+/* Metadata del mensaje */
+.message-metadata {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--metadata-bg, #f8fafc);
+  border: 1px solid var(--metadata-border, #e2e8f0);
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.mcp-tool-info,
+.error-info,
+.response-time,
+.tokens-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mcp-tool-info .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--primary-color, #3b82f6);
+}
+
+.error-info .icon.error {
+  color: var(--error-color, #ef4444);
+}
+
+.mcp-result {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.mcp-result .icon.success {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--success-color, #10b981);
+}
+
+.response-time,
+.tokens-info {
+  color: var(--text-secondary, #64748b);
+}
+
+/* Indicador de escritura */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 0;
+  color: var(--text-secondary, #64748b);
+}
+
+.typing-indicator .icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.typing-indicator span {
+  font-style: italic;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Scroll suave */
+.message-list {
+  scroll-behavior: smooth;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .message.user {
+    margin-left: 1rem;
+  }
+  
+  .message.assistant {
+    margin-right: 1rem;
+  }
+  
+  .message {
+    padding: 0.75rem;
+  }
+  
+  .message-header {
+    gap: 0.5rem;
+  }
+  
+  .message-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+  
+  .message-avatar .icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  
+  .code-block {
+    margin: 0.25rem 0;
+  }
+  
+  .code-block pre {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .message.user,
+  .message.assistant {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  
+  .message-text {
+    font-size: 0.8rem;
+  }
+  
+  .code-block code {
+    font-size: 0.75rem;
+  }
+}
+
+/* Tema oscuro */
+@media (prefers-color-scheme: dark) {
+  .message-list {
+    --user-bg: #1e3a8a;
+    --user-border: #3b82f6;
+    --user-avatar-bg: #3b82f6;
+    
+    --assistant-bg: #0f172a;
+    --assistant-border: #334155;
+    --assistant-avatar-bg: #10b981;
+    
+    --error-bg: #1e1b1b;
+    --error-border: #dc2626;
+    
+    --mcp-bg: #0c1e3a;
+    --mcp-border: #1d4ed8;
+    
+    --loading-bg: #1e293b;
+    
+    --avatar-bg: #334155;
+    --avatar-color: #94a3b8;
+    
+    --code-bg: #0f172a;
+    --code-border: #1e293b;
+    --code-header-bg: #1e293b;
+    --code-header-text: #64748b;
+    --code-text: #e2e8f0;
+    
+    --inline-code-bg: #334155;
+    --inline-code-text: #e2e8f0;
+    
+    --metadata-bg: #1e293b;
+    --metadata-border: #334155;
+    
+    --primary-color: #3b82f6;
+    --error-color: #ef4444;
+    --success-color: #10b981;
+  }
+}

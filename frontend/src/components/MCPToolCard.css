@@ -1,0 +1,346 @@
+/**
+ * ESTILOS MCP TOOL CARD - FRONTEND
+ * 
+ * Estilos para las tarjetas de herramientas MCP
+ * con estados, categorías y detalles expandibles.
+ */
+
+.mcp-tool-card {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-secondary, #ffffff);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.mcp-tool-card:hover {
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.mcp-tool-card.selected {
+  border-color: var(--primary-color, #3b82f6);
+  background: var(--primary-bg, #eff6ff);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Colores por categoría */
+.mcp-tool-card.blue {
+  border-left: 4px solid #3b82f6;
+}
+
+.mcp-tool-card.green {
+  border-left: 4px solid #10b981;
+}
+
+.mcp-tool-card.yellow {
+  border-left: 4px solid #f59e0b;
+}
+
+.mcp-tool-card.purple {
+  border-left: 4px solid #8b5cf6;
+}
+
+.mcp-tool-card.orange {
+  border-left: 4px solid #f97316;
+}
+
+.mcp-tool-card.gray {
+  border-left: 4px solid #6b7280;
+}
+
+/* Header de la herramienta */
+.tool-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.tool-info {
+  flex: 1;
+}
+
+.tool-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  line-height: 1.2;
+}
+
+.tool-name {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background: var(--code-bg, #f1f5f9);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+.tool-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.expand-btn:hover {
+  background: var(--primary-color, #3b82f6);
+  color: white;
+}
+
+/* Descripción */
+.tool-description {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.4;
+}
+
+/* Detalles expandidos */
+.tool-details {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+/* Esquema de entrada */
+.input-schema {
+  margin-bottom: 1rem;
+}
+
+.input-schema h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.no-params {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+  font-style: italic;
+}
+
+.params-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.param-item {
+  padding: 0.5rem;
+  background: var(--param-bg, #f8fafc);
+  border: 1px solid var(--param-border, #e2e8f0);
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.param-item.required {
+  border-left: 3px solid var(--primary-color, #3b82f6);
+}
+
+.param-item.optional {
+  border-left: 3px solid var(--secondary-color, #94a3b8);
+}
+
+.param-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.param-name {
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.param-type {
+  padding: 0.125rem 0.25rem;
+  background: var(--type-bg, #e2e8f0);
+  color: var(--type-text, #374151);
+  border-radius: 0.125rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.required-badge {
+  color: var(--primary-color, #3b82f6);
+  font-weight: bold;
+}
+
+.param-description {
+  margin: 0.25rem 0 0 0;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.3;
+}
+
+.param-options,
+.param-default {
+  margin-top: 0.25rem;
+  font-size: 0.675rem;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.param-options {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+/* Ejemplo de uso */
+.tool-example {
+  margin-bottom: 1rem;
+}
+
+.tool-example h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.example-prompt {
+  padding: 0.5rem;
+  background: var(--example-bg, #f0f9ff);
+  border: 1px solid var(--example-border, #bae6fd);
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--example-text, #0c4a6e);
+  font-style: italic;
+}
+
+/* Información técnica */
+.tool-technical h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.technical-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tech-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.tech-label {
+  color: var(--text-secondary, #64748b);
+}
+
+.tech-item code {
+  background: var(--code-bg, #f1f5f9);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.125rem;
+  font-size: 0.675rem;
+  color: var(--code-text, #374151);
+}
+
+/* Indicador de selección */
+.selection-indicator {
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mcp-tool-card {
+    padding: 0.75rem;
+  }
+  
+  .tool-title {
+    font-size: 0.8rem;
+  }
+  
+  .tool-description {
+    font-size: 0.7rem;
+  }
+  
+  .param-item {
+    padding: 0.375rem;
+  }
+  
+  .param-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
+/* Tema oscuro */
+@media (prefers-color-scheme: dark) {
+  .mcp-tool-card {
+    --bg-secondary: #1e293b;
+    --bg-hover: #334155;
+    --border-color: #334155;
+    --primary-color: #3b82f6;
+    --primary-bg: #1e3a8a;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
+    
+    --code-bg: #0f172a;
+    --code-text: #e2e8f0;
+    
+    --param-bg: #0f172a;
+    --param-border: #1e293b;
+    
+    --type-bg: #334155;
+    --type-text: #94a3b8;
+    
+    --example-bg: #0c1e3a;
+    --example-border: #1d4ed8;
+    --example-text: #60a5fa;
+    
+    --secondary-color: #64748b;
+  }
+  
+  .tool-name {
+    background: var(--code-bg, #0f172a);
+    color: var(--code-text, #e2e8f0);
+  }
+}
