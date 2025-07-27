@@ -6,15 +6,21 @@
   "scripts": {
     "install-all": "npm install && cd frontend && npm install",
     "build": "tsc",
+    "build:all": "npm run build && cd frontend && npm run build",
     "dev": "concurrently \"npm run server:dev\" \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "start": "concurrently \"npm run server:start\" \"npm run backend:start\"",
     "server:dev": "tsx watch src/mcp-server/server.ts",
     "server:start": "node dist/mcp-server/server.js",
     "backend:dev": "tsx watch src/backend/app.ts",
     "backend:start": "node dist/backend/app.js",
     "frontend:dev": "cd frontend && npm run dev",
     "frontend:build": "cd frontend && npm run build",
+    "frontend:start": "cd frontend && npm run preview",
     "test": "jest",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist && cd frontend && rm -rf dist",
+    "clean:all": "npm run clean && rm -rf node_modules && cd frontend && rm -rf node_modules",
+    "type-check": "tsc --noEmit",
+    "type-check:all": "npm run type-check && cd frontend && npx tsc --noEmit"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.0",

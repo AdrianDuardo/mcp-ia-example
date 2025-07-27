@@ -15,7 +15,7 @@
 
 import OpenAI from 'openai';
 import { v4 as uuidv4 } from 'uuid';
-import type { MCPClientService } from './mcp-client';
+import type { MCPClientService } from './mcp-client.js';
 import type {
   ChatMessage,
   ChatResponse,
@@ -135,19 +135,24 @@ ${availableTools.map(tool => `- ${tool.name}: ${tool.description}`).join('\n')}
 
 Mensaje del usuario: "${message}"
 
-Responde en JSON con:
+IMPORTANTE: Responde SOLAMENTE con un objeto JSON válido, sin texto adicional.
+
+Formato requerido:
 {
   "needsMCPTools": boolean,
   "suggestedTools": [{"name": "nombre_herramienta", "arguments": {...}}],
   "category": "calculadora|clima|notas|database|archivos|general"
 }
 
-Ejemplos de detección:
-- "calcula 15 + 30" → calculadora con operacion: "suma", numero1: 15, numero2: 30
-- "cómo está el clima en Madrid" → obtener_clima con ciudad: "Madrid"
-- "crea una nota sobre mi reunión" → crear_nota con titulo y contenido
-- "busca notas sobre proyecto" → buscar_notas con query: "proyecto"
-- "ejecuta SELECT * FROM usuarios" → ejecutar_sql con sql: "SELECT * FROM usuarios"
+Ejemplos:
+- Para "calcula 15 + 30":
+{"needsMCPTools": true, "suggestedTools": [{"name": "calculadora", "arguments": {"operacion": "suma", "numero1": 15, "numero2": 30}}], "category": "calculadora"}
+
+- Para "hola, como estas":
+{"needsMCPTools": false, "suggestedTools": [], "category": "general"}
+
+- Para "clima en Madrid":
+{"needsMCPTools": true, "suggestedTools": [{"name": "obtener_clima", "arguments": {"ciudad": "Madrid"}}], "category": "clima"}
 `;
 
       const response = await this.openai.chat.completions.create({
@@ -157,7 +162,32 @@ Ejemplos de detección:
         max_tokens: 500
       });
 
-      const analysis = JSON.parse(response.choices[0].message.content || '{}');
+      const responseContent = response.choices[0].message.content?.trim() || '{}';
+      console.log('🔍 Respuesta del análisis de intención:', responseContent);
+
+      // Intentar parsear el JSON
+      let analysis;
+      try {
+        analysis = JSON.parse(responseContent);
+      } catch (parseError) {
+        console.error('❌ Error parseando JSON del análisis:', parseError);
+        console.log('📄 Contenido recibido:', responseContent);
+
+        // Intentar extraer JSON de la respuesta si está envuelto en texto
+        const jsonMatch = responseContent.match(/\{.*\}/s);
+        if (jsonMatch) {
+          try {
+            analysis = JSON.parse(jsonMatch[0]);
+            console.log('✅ JSON extraído exitosamente');
+          } catch {
+            // Si todo falla, usar valores por defecto
+            analysis = { needsMCPTools: false, suggestedTools: [], category: 'general' };
+          }
+        } else {
+          analysis = { needsMCPTools: false, suggestedTools: [], category: 'general' };
+        }
+      }
+
       return {
         needsMCPTools: analysis.needsMCPTools || false,
         suggestedTools: analysis.suggestedTools || [],

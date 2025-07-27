@@ -37,17 +37,42 @@ npm run install-all
 ```
 
 ### 2. Configurar variables de entorno:
-Crea un archivo `.env` en la raíz del proyecto:
-```env
-OPENAI_API_KEY=tu_api_key_aqui
-PORT=3001
-FRONTEND_PORT=3000
+Crea un archivo `.env` basado en `.env.example`:
+```bash
+cp .env.example .env
 ```
 
-### 3. Ejecutar todo en modo desarrollo:
+Edita el archivo `.env` y configura tu API key de OpenAI:
+```env
+OPENAI_API_KEY=tu_api_key_aqui
+OPENWEATHER_API_KEY=tu_openweather_api_key_aqui  # Opcional
+PORT=3001
+NODE_ENV=development
+```
+
+### 3. Compilar el proyecto:
+```bash
+npm run build:all
+```
+
+### 4. Ejecutar en modo desarrollo (todos los servicios):
 ```bash
 npm run dev
 ```
+
+### 5. O ejecutar en modo producción:
+```bash
+# Servidor MCP + Backend solamente
+npm run start
+
+# Frontend (en otra terminal)
+npm run frontend:start
+```
+
+### 6. Servicios disponibles:
+- **Frontend**: http://localhost:5173 (dev) / http://localhost:4173 (preview)
+- **Backend API**: http://localhost:3001/api
+- **Admin Panel**: http://localhost:3001/
 
 Esto iniciará:
 - 🔧 Servidor MCP en stdio

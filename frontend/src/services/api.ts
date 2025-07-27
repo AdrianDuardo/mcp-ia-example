@@ -106,7 +106,7 @@ class ApiService {
    */
   async sendMessage(request: ChatRequest): Promise<ChatResponse> {
     try {
-      const response = await this.api.post<ApiResponse<ChatResponse>>('/chat', request);
+      const response = await this.api.post<ApiResponse<ChatResponse>>('/api/chat', request);
       if (!response.data.data) {
         throw new Error('No se recibió respuesta del servidor');
       }
@@ -122,7 +122,7 @@ class ApiService {
    */
   async getMessages(): Promise<ChatResponse[]> {
     try {
-      const response = await this.api.get<ApiResponse<ChatResponse[]>>('/chat/messages');
+      const response = await this.api.get<ApiResponse<ChatResponse[]>>('/api/chat/messages');
       return response.data.data || [];
     } catch (error) {
       console.error('Error obteniendo mensajes:', error);
@@ -135,7 +135,7 @@ class ApiService {
    */
   async clearMessages(): Promise<void> {
     try {
-      await this.api.delete('/chat/messages');
+      await this.api.delete('/api/chat/messages');
     } catch (error) {
       console.error('Error limpiando mensajes:', error);
       throw error;
@@ -151,7 +151,7 @@ class ApiService {
    */
   async getMCPTools(): Promise<MCPTool[]> {
     try {
-      const response = await this.api.get<ApiResponse<MCPTool[]>>('/mcp/tools');
+      const response = await this.api.get<ApiResponse<MCPTool[]>>('/api/mcp/tools');
       return response.data.data || [];
     } catch (error) {
       console.error('Error obteniendo herramientas MCP:', error);
@@ -164,7 +164,7 @@ class ApiService {
    */
   async getMCPResources(): Promise<MCPResource[]> {
     try {
-      const response = await this.api.get<ApiResponse<MCPResource[]>>('/mcp/resources');
+      const response = await this.api.get<ApiResponse<MCPResource[]>>('/api/mcp/resources');
       return response.data.data || [];
     } catch (error) {
       console.error('Error obteniendo recursos MCP:', error);
@@ -177,7 +177,7 @@ class ApiService {
    */
   async getMCPPrompts(): Promise<MCPPrompt[]> {
     try {
-      const response = await this.api.get<ApiResponse<MCPPrompt[]>>('/mcp/prompts');
+      const response = await this.api.get<ApiResponse<MCPPrompt[]>>('/api/mcp/prompts');
       return response.data.data || [];
     } catch (error) {
       console.error('Error obteniendo prompts MCP:', error);
@@ -190,7 +190,7 @@ class ApiService {
    */
   async callMCPTool(toolName: string, args: Record<string, unknown>): Promise<unknown> {
     try {
-      const response = await this.api.post(`/mcp/tools/${toolName}`, { args });
+      const response = await this.api.post(`/api/mcp/tools/${toolName}`, { args });
       return response.data;
     } catch (error) {
       console.error(`Error ejecutando herramienta ${toolName}:`, error);
@@ -203,15 +203,19 @@ class ApiService {
   // ===============================
 
   /**
-   * Obtiene las estadísticas del servidor
+   * Obtiene estadísticas del servidor
    */
   async getServerStats(): Promise<ServerStats> {
     try {
-      const response = await this.api.get<ApiResponse<ServerStats>>('/stats');
-      if (!response.data.data) {
-        throw new Error('No se pudieron obtener las estadísticas del servidor');
-      }
-      return response.data.data;
+      const response = await this.api.get<ApiResponse<ServerStats>>('/api/stats');
+      return response.data.data || {
+        uptime: 0,
+        totalConversations: 0,
+        totalMessages: 0,
+        mcpToolCalls: 0,
+        averageResponseTime: 0,
+        activeConnections: 0
+      };
     } catch (error) {
       console.error('Error obteniendo estadísticas:', error);
       throw error;
@@ -223,11 +227,11 @@ class ApiService {
   // ===============================
 
   /**
-   * Verifica si el servidor está disponible
+   * Verifica la salud del servidor
    */
-  async healthCheck(): Promise<boolean> {
+  async checkHealth(): Promise<boolean> {
     try {
-      await this.api.get('/health');
+      await this.api.get('/api/health');
       return true;
     } catch {
       return false;

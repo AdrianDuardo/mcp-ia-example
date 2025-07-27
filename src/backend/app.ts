@@ -19,9 +19,9 @@ import cors from 'cors';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import dotenv from 'dotenv';
-import { ChatService } from './services/chat';
-import { MCPClientService } from './services/mcp-client';
-import { ConversationManager } from './services/conversation';
+import { ChatService } from './services/chat.js';
+import { MCPClientService } from './services/mcp-client.js';
+import { ConversationManager } from './services/conversation.js';
 import type {
   ChatRequest,
   ChatResponse,
@@ -64,9 +64,15 @@ class MCPBackendServer {
    */
   private setupMiddleware(): void {
     // CORS para permitir acceso desde el frontend
+    const corsOrigins = process.env.CORS_ORIGINS ?
+      process.env.CORS_ORIGINS.split(',').map(origin => origin.trim()) :
+      ['http://localhost:5173', 'http://localhost:3000'];
+
     this.app.use(cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-      credentials: true
+      origin: corsOrigins,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization']
     }));
 
     // Parser JSON
@@ -75,7 +81,7 @@ class MCPBackendServer {
 
     // Logging de requests
     this.app.use((req, res, next) => {
-      console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+      console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.get('Origin')}`);
       next();
     });
 

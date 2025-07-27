@@ -18,10 +18,10 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { DatabaseService } from "./database/database";
-import { WeatherService } from "./services/weather";
-import { FileService } from "./services/files";
-import { NotesService } from "./services/notes";
+import { DatabaseService } from "./database/database.js";
+import { WeatherService } from "./services/weather.js";
+import { FileService } from "./services/files.js";
+import { NotesService } from "./services/notes.js";
 
 /**
  * PASO 1: CREAR EL SERVIDOR MCP
