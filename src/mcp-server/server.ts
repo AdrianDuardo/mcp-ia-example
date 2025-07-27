@@ -375,6 +375,148 @@ server.registerTool(
   }
 );
 
+
+// 📁 TOOL: READ FILE
+server.registerTool(
+  "read_file",
+  {
+    title: "📁 Read File",
+    description: "Reads content from a file in the data directory",
+    inputSchema: {
+      path: z.string({ description: "Relative path to the file" })
+    }
+  },
+  async ({ path }) => {
+    try {
+      const content = await fileService.readFile(path);
+      return {
+        content: [{
+          type: "text",
+          text: `📁 File content from '${path}':\n\n\`\`\`\n${content}\n\`\`\``
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `❌ Error reading file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// ✍️ TOOL: WRITE FILE
+server.registerTool(
+  "write_file",
+  {
+    title: "✍️ Write File",
+    description: "Writes content to a file in the data directory",
+    inputSchema: {
+      path: z.string({ description: "Relative path to the file" }),
+      content: z.string({ description: "Content to write to the file" })
+    }
+  },
+  async ({ path, content }) => {
+    try {
+      await fileService.writeFile(path, content);
+      return {
+        content: [{
+          type: "text",
+          text: `✍️ File '${path}' written successfully`
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `❌ Error writing file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// 📋 TOOL: LIST FILES
+server.registerTool(
+  "list_files",
+  {
+    title: "📋 List Files",
+    description: "Lists files and directories in the data directory",
+    inputSchema: {
+      path: z.string({ description: "Relative path to list (default: root)" }).default("")
+    }
+  },
+  async ({ path }) => {
+    try {
+      const files = await fileService.listFiles(path);
+
+      if (files.length === 0) {
+        return {
+          content: [{
+            type: "text",
+            text: `📋 No files found in '${path || 'root'}'`
+          }]
+        };
+      }
+
+      const result = files.map(file => {
+        const icon = file.isDirectory ? "📁" : "📄";
+        const size = file.isDirectory ? "" : ` (${(file.size / 1024).toFixed(1)}KB)`;
+        return `${icon} **${file.name}**${size}\n   📅 Modified: ${file.modificationDate}`;
+      }).join('\n\n');
+
+      return {
+        content: [{
+          type: "text",
+          text: `📋 Files in '${path || 'root'}':\n\n${result}`
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `❌ Error listing files: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// 🔍 TOOL: FILE EXISTS
+server.registerTool(
+  "file_exists",
+  {
+    title: "🔍 Check File Exists",
+    description: "Checks if a file exists in the data directory",
+    inputSchema: {
+      path: z.string({ description: "Relative path to check" })
+    }
+  },
+  async ({ path }) => {
+    try {
+      const exists = await fileService.fileExists(path);
+      return {
+        content: [{
+          type: "text",
+          text: `🔍 File '${path}' ${exists ? 'exists' : 'does not exist'}`
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `❌ Error checking file: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
 // �🗄️ TOOL: DATABASE QUERY
 server.registerTool(
   "execute_sql",
@@ -449,7 +591,7 @@ server.registerResource(
         name: process.env.MCP_SERVER_NAME || "Tutorial MCP Server",
         version: process.env.MCP_SERVER_VERSION || "1.0.0",
         description: "Example server for learning MCP",
-        tools: ["calculator", "weather", "notes (CRUD)", "sql"],
+        tools: ["calculator", "weather", "notes (CRUD)", "files (CRUD)", "sql"],
         author: "MCP Tutorial",
         creationDate: new Date().toISOString()
       }, null, 2)
@@ -602,7 +744,7 @@ async function initializeServer() {
     await server.connect(transport);
 
     console.error("🎉 MCP server started successfully!");
-    console.error("📋 Available tools: calculator, weather, notes (CRUD), SQL");
+    console.error("📋 Available tools: calculator, weather, notes (CRUD), files (CRUD), SQL");
     console.error("📊 Available resources: server info, files, DB statistics");
     console.error("💬 Available prompts: data analysis, weather report");
 

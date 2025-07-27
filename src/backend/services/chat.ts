@@ -141,7 +141,7 @@ Required format:
 {
   "needsMCPTools": boolean,
   "suggestedTools": [{"name": "tool_name", "arguments": {...}}],
-  "category": "calculator|weather|notes|database|files|general"
+  "category": "calculator|weather|notes|files|database|general"
 }
 
 EXACT PARAMETERS by tool:
@@ -152,6 +152,10 @@ EXACT PARAMETERS by tool:
 - get_note: {"id": number}
 - update_note: {"id": number, "title": "string (optional)", "content": "string (optional)", "category": "string (optional)"}
 - delete_note: {"id": number}
+- read_file: {"path": "string"}
+- write_file: {"path": "string", "content": "string"}
+- list_files: {"path": "string (optional)"}
+- file_exists: {"path": "string"}
 - execute_sql: {"sql": "string"}
 
 Examples:
@@ -175,6 +179,18 @@ Examples:
 
 - For "delete note 2":
 {"needsMCPTools": true, "suggestedTools": [{"name": "delete_note", "arguments": {"id": 2}}], "category": "notes"}
+
+- For "read file config.txt" or "show me the content of readme.md":
+{"needsMCPTools": true, "suggestedTools": [{"name": "read_file", "arguments": {"path": "config.txt"}}], "category": "files"}
+
+- For "write hello world to test.txt":
+{"needsMCPTools": true, "suggestedTools": [{"name": "write_file", "arguments": {"path": "test.txt", "content": "hello world"}}], "category": "files"}
+
+- For "list files" or "show me all files":
+{"needsMCPTools": true, "suggestedTools": [{"name": "list_files", "arguments": {"path": ""}}], "category": "files"}
+
+- For "check if data.json exists":
+{"needsMCPTools": true, "suggestedTools": [{"name": "file_exists", "arguments": {"path": "data.json"}}], "category": "files"}
 `;
 
       const response = await this.openai.chat.completions.create({
@@ -285,9 +301,9 @@ Examples:
 AVAILABLE TOOLS:
 - Calculator: for mathematical operations
 - Weather: for meteorological information
-- Notes: for creating and searching notes
+- Notes: for creating, reading, updating and deleting notes
+- Files: for reading, writing and managing files
 - Database: for SQL queries
-- Files: for reading system files
 
 INSTRUCTIONS:
 1. ALWAYS respond in the SAME LANGUAGE that the user is writing to you
