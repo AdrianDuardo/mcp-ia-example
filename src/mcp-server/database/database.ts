@@ -30,7 +30,7 @@ export class DatabaseService {
 
   constructor() {
     // Crear directorio de datos si no existe
-    this.dbPath = path.join(process.cwd(), 'data', 'tutorial.sqlite');
+    this.dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'tutorial.sqlite');
   }
 
   /**

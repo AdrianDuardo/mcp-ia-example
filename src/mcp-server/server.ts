@@ -15,9 +15,13 @@
  * - Define prompts reutilizables para diferentes tareas
  */
 
+import dotenv from 'dotenv';
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+
+// Cargar variables de entorno
+dotenv.config();
 import { DatabaseService } from "./database/database.js";
 import { WeatherService } from "./services/weather.js";
 import { FileService } from "./services/files.js";
@@ -30,8 +34,8 @@ import { NotesService } from "./services/notes.js";
  * Define el nombre y versión de nuestro servidor.
  */
 const server = new McpServer({
-  name: "tutorial-mcp-server",
-  version: "1.0.0"
+  name: process.env.MCP_SERVER_NAME || "tutorial-mcp-server",
+  version: process.env.MCP_SERVER_VERSION || "1.0.0"
 });
 
 // Inicializar servicios
@@ -299,8 +303,8 @@ server.registerResource(
     contents: [{
       uri: uri.href,
       text: JSON.stringify({
-        nombre: "Tutorial MCP Server",
-        version: "1.0.0",
+        nombre: process.env.MCP_SERVER_NAME || "Tutorial MCP Server",
+        version: process.env.MCP_SERVER_VERSION || "1.0.0",
         descripcion: "Servidor de ejemplo para aprender MCP",
         herramientas: ["calculadora", "clima", "notas", "sql"],
         autor: "Tutorial MCP",

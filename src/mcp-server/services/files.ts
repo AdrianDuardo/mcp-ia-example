@@ -268,11 +268,11 @@ export class FileService {
         path: 'config.json',
         content: JSON.stringify({
           aplicacion: "MCP Tutorial",
-          version: "1.0.0",
+          version: process.env.MCP_SERVER_VERSION || "1.0.0",
           configuracion: {
             debug: true,
-            puerto: 3001,
-            baseDatos: "tutorial.sqlite"
+            puerto: process.env.PORT || 3001,
+            baseDatos: process.env.DATABASE_PATH || "tutorial.sqlite"
           },
           caracteristicas: [
             "Servidor MCP",
