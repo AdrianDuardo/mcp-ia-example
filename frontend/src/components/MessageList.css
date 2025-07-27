@@ -1,8 +1,8 @@
 /**
- * ESTILOS MESSAGE LIST - FRONTEND
+ * MESSAGE LIST STYLES - FRONTEND
  * 
- * Estilos para la lista de mensajes del chat
- * con soporte para código, metadatos y diferentes tipos de mensaje.
+ * Styles for chat message list
+ * with support for code, metadata and different message types.
  */
 
 .message-list {
@@ -35,7 +35,7 @@
   font-size: 1.125rem;
 }
 
-/* Mensaje individual */
+/* Individual message */
 .message {
   display: flex;
   flex-direction: column;
@@ -51,7 +51,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Tipos de mensaje */
+/* Message types */
 .message.user {
   background: var(--user-bg, #eff6ff);
   border-color: var(--user-border, #bfdbfe);
@@ -80,7 +80,7 @@
   background: var(--loading-bg, #f1f5f9);
 }
 
-/* Header del mensaje */
+/* Message header */
 .message-header {
   display: flex;
   align-items: center;
@@ -131,7 +131,7 @@
   color: var(--text-secondary, #64748b);
 }
 
-/* Cuerpo del mensaje */
+/* Message body */
 .message-body {
   display: flex;
   flex-direction: column;
@@ -187,7 +187,7 @@
   font-size: 0.8em;
 }
 
-/* Metadata del mensaje */
+/* Message metadata */
 .message-metadata {
   display: flex;
   flex-direction: column;

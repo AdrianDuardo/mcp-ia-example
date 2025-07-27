@@ -1,14 +1,14 @@
 /**
- * CLIENTE MCP - TUTORIAL
+ * MCP CLIENT - TUTORIAL
  * 
- * Este servicio conecta el backend con el servidor MCP.
- * Actúa como el PUENTE entre nuestro backend y las herramientas MCP.
+ * This service connects the backend with the MCP server.
+ * Acts as the BRIDGE between our backend and MCP tools.
  * 
- * 🔗 FUNCIONALIDADES:
- * - Conecta al servidor MCP via stdio
- * - Lista herramientas, recursos y prompts
- * - Ejecuta herramientas con validación
- * - Maneja errores y reconexión
+ * 🔗 FUNCTIONALITIES:
+ * - Connects to MCP server via stdio
+ * - Lists tools, resources and prompts
+ * - Executes tools with validation
+ * - Handles errors and reconnection
  */
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -26,43 +26,43 @@ export class MCPClientService {
   private maxReconnectAttempts: number = 3;
 
   constructor() {
-    console.log('🔧 Inicializando cliente MCP...');
+    console.log('🔧 Initializing MCP client...');
   }
 
   /**
-   * Conecta al servidor MCP
+   * Connects to MCP server
    */
   async connect(): Promise<void> {
     try {
-      console.log('🔌 Conectando al servidor MCP...');
+      console.log('🔌 Connecting to MCP server...');
 
-      // Ruta al servidor MCP compilado
+      // Path to compiled MCP server
       const serverPath = path.join(process.cwd(), 'dist', 'mcp-server', 'server.js');
 
-      // Crear proceso del servidor MCP
+      // Create MCP server process
       this.serverProcess = spawn('node', [serverPath], {
         stdio: ['pipe', 'pipe', 'pipe'],
         cwd: process.cwd()
       });
 
-      // Manejar errores del proceso servidor
+      // Handle server process errors
       this.serverProcess.on('error', (error) => {
-        console.error('❌ Error en proceso servidor MCP:', error);
+        console.error('❌ Error in MCP server process:', error);
         this.isConnected = false;
       });
 
       this.serverProcess.on('exit', (code, signal) => {
-        console.log(`⚠️ Servidor MCP terminó (código: ${code}, señal: ${signal})`);
+        console.log(`⚠️ MCP server terminated (code: ${code}, signal: ${signal})`);
         this.isConnected = false;
 
-        // Intentar reconexión si no fue terminación intencional
+        // Attempt reconnection if not intentional termination
         if (code !== 0 && this.reconnectAttempts < this.maxReconnectAttempts) {
-          console.log(`🔄 Intentando reconexión (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})...`);
+          console.log(`🔄 Attempting reconnection (${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})...`);
           setTimeout(() => this.reconnect(), 2000);
         }
       });
 
-      // Crear cliente MCP
+      // Create MCP client
       this.client = new Client(
         {
           name: 'mcp-backend-client',
@@ -73,29 +73,29 @@ export class MCPClientService {
         }
       );
 
-      // Crear transporte stdio usando el proceso
+      // Create stdio transport using the process
       this.transport = new StdioClientTransport({
         command: 'node',
         args: [serverPath],
         cwd: process.cwd()
       });
 
-      // Conectar cliente
+      // Connect client
       await this.client.connect(this.transport);
 
       this.isConnected = true;
       this.reconnectAttempts = 0;
-      console.log('✅ Cliente MCP conectado exitosamente');
+      console.log('✅ MCP client connected successfully');
 
     } catch (error) {
-      console.error('❌ Error conectando a MCP:', error);
+      console.error('❌ Error connecting to MCP:', error);
       this.isConnected = false;
-      throw new Error(`Error conectando al servidor MCP: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error connecting to MCP server: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Intenta reconectar al servidor MCP
+   * Attempts to reconnect to MCP server
    */
   private async reconnect(): Promise<void> {
     this.reconnectAttempts++;
@@ -103,20 +103,20 @@ export class MCPClientService {
     try {
       await this.disconnect();
       await this.connect();
-      console.log('✅ Reconexión MCP exitosa');
+      console.log('✅ MCP reconnection successful');
     } catch (error) {
-      console.error(`❌ Error en reconexión ${this.reconnectAttempts}:`, error);
+      console.error(`❌ Error in reconnection attempt ${this.reconnectAttempts}:`, error);
 
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         setTimeout(() => this.reconnect(), 5000);
       } else {
-        console.error('❌ Máximo de intentos de reconexión alcanzado');
+        console.error('❌ Maximum reconnection attempts reached');
       }
     }
   }
 
   /**
-   * Desconecta del servidor MCP
+   * Disconnects from MCP server
    */
   async disconnect(): Promise<void> {
     try {
@@ -128,7 +128,7 @@ export class MCPClientService {
       if (this.serverProcess && !this.serverProcess.killed) {
         this.serverProcess.kill('SIGTERM');
 
-        // Esperar un poco antes de forzar el cierre
+        // Wait a bit before forcing close
         setTimeout(() => {
           if (this.serverProcess && !this.serverProcess.killed) {
             this.serverProcess.kill('SIGKILL');
@@ -140,25 +140,25 @@ export class MCPClientService {
       this.serverProcess = null;
       this.isConnected = false;
 
-      console.log('✅ Cliente MCP desconectado');
+      console.log('✅ MCP client disconnected');
     } catch (error) {
-      console.error('⚠️ Error desconectando MCP:', error);
+      console.error('⚠️ Error disconnecting MCP:', error);
     }
   }
 
   /**
-   * Verifica si el cliente está conectado
+   * Checks if client is connected
    */
   isClientConnected(): boolean {
     return this.isConnected && this.client !== null;
   }
 
   /**
-   * Lista todas las herramientas disponibles
+   * Lists all available tools
    */
   async listTools(): Promise<MCPTool[]> {
     if (!this.isClientConnected() || !this.client) {
-      throw new Error('Cliente MCP no conectado');
+      throw new Error('MCP client not connected');
     }
 
     try {
@@ -171,17 +171,17 @@ export class MCPClientService {
         inputSchema: tool.inputSchema
       }));
     } catch (error) {
-      console.error('Error listando herramientas MCP:', error);
-      throw new Error(`Error obteniendo herramientas: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      console.error('Error listing MCP tools:', error);
+      throw new Error(`Error getting tools: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Lista todos los recursos disponibles
+   * Lists all available resources
    */
   async listResources(): Promise<MCPResource[]> {
     if (!this.isClientConnected() || !this.client) {
-      throw new Error('Cliente MCP no conectado');
+      throw new Error('MCP client not connected');
     }
 
     try {
@@ -194,17 +194,17 @@ export class MCPClientService {
         mimeType: resource.mimeType
       }));
     } catch (error) {
-      console.error('Error listando recursos MCP:', error);
-      throw new Error(`Error obteniendo recursos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      console.error('Error listing MCP resources:', error);
+      throw new Error(`Error getting resources: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Lista todos los prompts disponibles
+   * Lists all available prompts
    */
   async listPrompts(): Promise<MCPPrompt[]> {
     if (!this.isClientConnected() || !this.client) {
-      throw new Error('Cliente MCP no conectado');
+      throw new Error('MCP client not connected');
     }
 
     try {
@@ -217,88 +217,88 @@ export class MCPClientService {
         arguments: prompt.arguments
       }));
     } catch (error) {
-      console.error('Error listando prompts MCP:', error);
-      throw new Error(`Error obteniendo prompts: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      console.error('Error listing MCP prompts:', error);
+      throw new Error(`Error getting prompts: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Ejecuta una herramienta MCP
+   * Executes an MCP tool
    */
   async callTool(name: string, args: Record<string, any>): Promise<any> {
     if (!this.isClientConnected() || !this.client) {
-      throw new Error('Cliente MCP no conectado');
+      throw new Error('MCP client not connected');
     }
 
     try {
-      console.log(`🔧 Ejecutando herramienta: ${name}`, args);
+      console.log(`🔧 Executing tool: ${name}`, args);
 
       const response = await this.client.callTool({
         name,
         arguments: args
       });
 
-      console.log(`✅ Herramienta ${name} ejecutada exitosamente`);
+      console.log(`✅ Tool ${name} executed successfully`);
       return response;
     } catch (error) {
-      console.error(`❌ Error ejecutando herramienta ${name}:`, error);
-      throw new Error(`Error ejecutando ${name}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      console.error(`❌ Error executing tool ${name}:`, error);
+      throw new Error(`Error executing ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Lee un recurso MCP
+   * Reads an MCP resource
    */
   async readResource(uri: string): Promise<any> {
     if (!this.isClientConnected() || !this.client) {
-      throw new Error('Cliente MCP no conectado');
+      throw new Error('MCP client not connected');
     }
 
     try {
-      console.log(`📖 Leyendo recurso: ${uri}`);
+      console.log(`📖 Reading resource: ${uri}`);
 
       const response = await this.client.readResource({ uri });
 
-      console.log(`✅ Recurso ${uri} leído exitosamente`);
+      console.log(`✅ Resource ${uri} read successfully`);
       return response;
     } catch (error) {
-      console.error(`❌ Error leyendo recurso ${uri}:`, error);
-      throw new Error(`Error leyendo recurso: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      console.error(`❌ Error reading resource ${uri}:`, error);
+      throw new Error(`Error reading resource: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Obtiene un prompt MCP
+   * Gets an MCP prompt
    */
   async getPrompt(name: string, args?: Record<string, any>): Promise<any> {
     if (!this.isClientConnected() || !this.client) {
-      throw new Error('Cliente MCP no conectado');
+      throw new Error('MCP client not connected');
     }
 
     try {
-      console.log(`💬 Obteniendo prompt: ${name}`, args);
+      console.log(`💬 Getting prompt: ${name}`, args);
 
       const response = await this.client.getPrompt({
         name,
         arguments: args || {}
       });
 
-      console.log(`✅ Prompt ${name} obtenido exitosamente`);
+      console.log(`✅ Prompt ${name} retrieved successfully`);
       return response;
     } catch (error) {
-      console.error(`❌ Error obteniendo prompt ${name}:`, error);
-      throw new Error(`Error obteniendo prompt: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      console.error(`❌ Error getting prompt ${name}:`, error);
+      throw new Error(`Error getting prompt: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Ping para verificar conectividad
+   * Ping to verify connectivity
    */
   async ping(): Promise<boolean> {
     try {
       if (!this.isClientConnected()) return false;
 
-      // Intentar listar herramientas como ping
+      // Try to list tools as ping
       await this.listTools();
       return true;
     } catch {
@@ -307,7 +307,7 @@ export class MCPClientService {
   }
 
   /**
-   * Obtiene estadísticas del cliente
+   * Gets client statistics
    */
   getStats(): {
     connected: boolean;

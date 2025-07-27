@@ -1,16 +1,16 @@
 /**
- * SERVICIO DE CHAT - TUTORIAL MCP
+ * CHAT SERVICE - MCP TUTORIAL
  * 
- * Este servicio es el CEREBRO del sistema. Integra:
- * 1. OpenAI API para generar respuestas inteligentes
- * 2. Servidor MCP para ejecutar herramientas
- * 3. Análisis de intenciones del usuario
+ * This service is the BRAIN of the system. Integrates:
+ * 1. OpenAI API to generate intelligent responses
+ * 2. MCP Server to execute tools
+ * 3. User intention analysis
  * 
- * 🧠 FUNCIONALIDADES:
- * - Detecta cuándo usar herramientas MCP
- * - Ejecuta múltiples herramientas en secuencia
- * - Mantiene contexto de conversación
- * - Formatea respuestas de forma natural
+ * 🧠 FUNCTIONALITIES:
+ * - Detects when to use MCP tools
+ * - Executes multiple tools in sequence
+ * - Maintains conversation context
+ * - Formats responses naturally
  */
 
 import OpenAI from 'openai';
@@ -31,16 +31,16 @@ export class ChatService {
   constructor(mcpClient: MCPClientService) {
     this.mcpClient = mcpClient;
 
-    // Inicializar OpenAI
+    // Initialize OpenAI
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY
     });
 
-    console.log('✅ Servicio de chat inicializado con OpenAI');
+    console.log('✅ Chat service initialized with OpenAI');
   }
 
   /**
-   * Procesa un mensaje del usuario y genera una respuesta inteligente
+   * Processes a user message and generates an intelligent response
    */
   async processMessage(
     userMessage: string,
@@ -51,19 +51,19 @@ export class ChatService {
     const mcpActions: MCPAction[] = [];
 
     try {
-      console.log(`💬 Procesando mensaje: "${userMessage.substring(0, 50)}..."`);
+      console.log(`💬 Processing message: "${userMessage.substring(0, 50)}..."`);
 
-      // 1. ANALIZAR INTENCIÓN DEL USUARIO
+      // 1. ANALYZE USER INTENTION
       const intention = await this.analyzeUserIntention(userMessage);
-      console.log(`🎯 Intención detectada:`, intention);
+      console.log(`🎯 Detected intention:`, intention);
 
-      // 2. EJECUTAR HERRAMIENTAS MCP SI ES NECESARIO
+      // 2. EXECUTE MCP TOOLS IF NECESSARY
       let mcpResults = '';
       if (intention.needsMCPTools && intention.suggestedTools.length > 0) {
         mcpResults = await this.executeMCPTools(intention.suggestedTools, mcpActions);
       }
 
-      // 3. GENERAR RESPUESTA CON OPENAI
+      // 3. GENERATE RESPONSE WITH OPENAI
       const systemPrompt = this.buildSystemPrompt(mcpResults);
       const assistantResponse = await this.generateOpenAIResponse(
         userMessage,
@@ -71,7 +71,7 @@ export class ChatService {
         mcpResults
       );
 
-      // 4. CREAR MENSAJE DE RESPUESTA
+      // 4. CREATE RESPONSE MESSAGE
       const responseMessage: ChatMessage = {
         id: uuidv4(),
         role: 'assistant',
@@ -82,12 +82,12 @@ export class ChatService {
         }
       };
 
-      // 5. REGISTRAR ESTADÍSTICAS
+      // 5. REGISTER STATISTICS
       const responseTime = Date.now() - startTime;
       this.responseTimes.push(responseTime);
       if (mcpActions.length > 0) this.toolCallCount++;
 
-      console.log(`✅ Respuesta generada en ${responseTime}ms`);
+      console.log(`✅ Response generated in ${responseTime}ms`);
 
       return {
         message: responseMessage,
@@ -96,13 +96,13 @@ export class ChatService {
       };
 
     } catch (error) {
-      console.error('❌ Error procesando mensaje:', error);
+      console.error('❌ Error processing message:', error);
 
-      // Mensaje de error amigable
+      // Friendly error message
       const errorMessage: ChatMessage = {
         id: uuidv4(),
         role: 'assistant',
-        content: `Lo siento, ocurrió un error procesando tu mensaje: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        content: `Sorry, an error occurred processing your message: ${error instanceof Error ? error.message : 'Unknown error'}`,
         timestamp: new Date().toISOString(),
         metadata: { error: true }
       };
@@ -116,7 +116,7 @@ export class ChatService {
   }
 
   /**
-   * Analiza la intención del usuario para determinar qué herramientas usar
+   * Analyzes user intention to determine which tools to use
    */
   private async analyzeUserIntention(message: string): Promise<{
     needsMCPTools: boolean;
@@ -124,73 +124,73 @@ export class ChatService {
     category: string;
   }> {
     try {
-      // Obtener herramientas disponibles
+      // Get available tools
       const availableTools = await this.mcpClient.listTools();
 
       const analysisPrompt = `
-Analiza el siguiente mensaje del usuario y determina si necesita usar herramientas MCP.
+Analyze the following user message and determine if it needs to use MCP tools.
 
-Herramientas disponibles:
+Available tools:
 ${availableTools.map(tool => `- ${tool.name}: ${tool.description}`).join('\n')}
 
-Mensaje del usuario: "${message}"
+User message: "${message}"
 
-IMPORTANTE: Responde SOLAMENTE con un objeto JSON válido, sin texto adicional.
+IMPORTANT: Respond ONLY with a valid JSON object, without additional text.
 
-Formato requerido:
+Required format:
 {
   "needsMCPTools": boolean,
-  "suggestedTools": [{"name": "nombre_herramienta", "arguments": {...}}],
-  "category": "calculadora|clima|notas|database|archivos|general"
+  "suggestedTools": [{"name": "tool_name", "arguments": {...}}],
+  "category": "calculator|weather|notes|database|files|general"
 }
 
-PARÁMETROS EXACTOS por herramienta:
-- calculadora: {"operacion": "suma|resta|multiplicacion|division", "numero1": number, "numero2": number}
-- obtener_clima: {"ciudad": "string", "pais": "string (opcional)"}
-- crear_nota: {"titulo": "string", "contenido": "string", "categoria": "string (opcional)"}
-- buscar_notas: {"query": "string (opcional)", "categoria": "string (opcional)", "limite": number}
-- ejecutar_sql: {"sql": "string"}
+EXACT PARAMETERS by tool:
+- calculator: {"operation": "add|subtract|multiply|divide", "number1": number, "number2": number}
+- get_weather: {"city": "string", "country": "string (optional)"}
+- create_note: {"title": "string", "content": "string", "category": "string (optional)"}
+- search_notes: {"query": "string (optional)", "category": "string (optional)", "limit": number}
+- execute_sql: {"sql": "string"}
 
-Ejemplos:
-- Para "calcula 15 + 30":
-{"needsMCPTools": true, "suggestedTools": [{"name": "calculadora", "arguments": {"operacion": "suma", "numero1": 15, "numero2": 30}}], "category": "calculadora"}
+Examples:
+- For "calculate 15 + 30":
+{"needsMCPTools": true, "suggestedTools": [{"name": "calculator", "arguments": {"operation": "add", "number1": 15, "number2": 30}}], "category": "calculator"}
 
-- Para "hola, como estas":
+- For "hello, how are you":
 {"needsMCPTools": false, "suggestedTools": [], "category": "general"}
 
-- Para "clima en Madrid":
-{"needsMCPTools": true, "suggestedTools": [{"name": "obtener_clima", "arguments": {"ciudad": "Madrid"}}], "category": "clima"}
+- For "weather in Madrid":
+{"needsMCPTools": true, "suggestedTools": [{"name": "get_weather", "arguments": {"city": "Madrid"}}], "category": "weather"}
 
-- Para "muestra los usuarios de la base de datos":
-{"needsMCPTools": true, "suggestedTools": [{"name": "ejecutar_sql", "arguments": {"sql": "SELECT * FROM usuarios"}}], "category": "database"}
+- For "show database users":
+{"needsMCPTools": true, "suggestedTools": [{"name": "execute_sql", "arguments": {"sql": "SELECT * FROM users"}}], "category": "database"}
 `;
 
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4',
         messages: [{ role: 'user', content: analysisPrompt }],
-        temperature: 0.1, // Baja creatividad para análisis preciso
+        temperature: 0.1, // Low creativity for precise analysis
         max_tokens: 500
       });
 
       const responseContent = response.choices[0].message.content?.trim() || '{}';
-      console.log('🔍 Respuesta del análisis de intención:', responseContent);
+      console.log('🔍 Intention analysis response:', responseContent);
 
-      // Intentar parsear el JSON
+      // Try to parse JSON
       let analysis;
       try {
         analysis = JSON.parse(responseContent);
       } catch (parseError) {
-        console.error('❌ Error parseando JSON del análisis:', parseError);
-        console.log('📄 Contenido recibido:', responseContent);
+        console.error('❌ Error parsing analysis JSON:', parseError);
+        console.log('📄 Content received:', responseContent);
 
-        // Intentar extraer JSON de la respuesta si está envuelto en texto
+        // Try to extract JSON from response if wrapped in text
         const jsonMatch = responseContent.match(/\{.*\}/s);
         if (jsonMatch) {
           try {
             analysis = JSON.parse(jsonMatch[0]);
-            console.log('✅ JSON extraído exitosamente');
+            console.log('✅ JSON extracted successfully');
           } catch {
-            // Si todo falla, usar valores por defecto
+            // If everything fails, use default values
             analysis = { needsMCPTools: false, suggestedTools: [], category: 'general' };
           }
         } else {
@@ -205,7 +205,7 @@ Ejemplos:
       };
 
     } catch (error) {
-      console.error('Error analizando intención:', error);
+      console.error('Error analyzing intention:', error);
       return {
         needsMCPTools: false,
         suggestedTools: [],
@@ -215,7 +215,7 @@ Ejemplos:
   }
 
   /**
-   * Ejecuta las herramientas MCP sugeridas
+   * Executes suggested MCP tools
    */
   private async executeMCPTools(
     suggestedTools: Array<{ name: string; arguments: Record<string, any> }>,
@@ -225,7 +225,7 @@ Ejemplos:
 
     for (const tool of suggestedTools) {
       try {
-        console.log(`🔧 Ejecutando herramienta: ${tool.name}`);
+        console.log(`🔧 Executing tool: ${tool.name}`);
 
         const action: MCPAction = {
           type: 'tool_call',
@@ -237,27 +237,27 @@ Ejemplos:
         action.result = result;
         mcpActions.push(action);
 
-        // Formatear resultado para incluir en el contexto
+        // Format result to include in context
         if (result && result.content) {
           const content = Array.isArray(result.content)
             ? result.content.map((c: any) => c.text || c).join('\n')
             : result.content;
 
-          results += `\n=== Resultado de ${tool.name} ===\n${content}\n`;
+          results += `\n=== Result from ${tool.name} ===\n${content}\n`;
         }
 
       } catch (error) {
-        console.error(`Error ejecutando ${tool.name}:`, error);
+        console.error(`Error executing ${tool.name}:`, error);
 
         const action: MCPAction = {
           type: 'tool_call',
           name: tool.name,
           arguments: tool.arguments,
-          error: error instanceof Error ? error.message : 'Error desconocido'
+          error: error instanceof Error ? error.message : 'Unknown error'
         };
         mcpActions.push(action);
 
-        results += `\n=== Error en ${tool.name} ===\n${error instanceof Error ? error.message : 'Error desconocido'}\n`;
+        results += `\n=== Error in ${tool.name} ===\n${error instanceof Error ? error.message : 'Unknown error'}\n`;
       }
     }
 
@@ -265,33 +265,33 @@ Ejemplos:
   }
 
   /**
-   * Construye el prompt del sistema con contexto MCP
+   * Builds system prompt with MCP context
    */
   private buildSystemPrompt(mcpResults: string): string {
-    return `Eres un asistente inteligente que puede usar herramientas MCP (Model Context Protocol) para ayudar a los usuarios.
+    return `You are an intelligent assistant that can use MCP (Model Context Protocol) tools to help users.
 
-HERRAMIENTAS DISPONIBLES:
-- Calculadora: para operaciones matemáticas
-- Clima: para información meteorológica
-- Notas: para crear y buscar notas
-- Base de datos: para consultas SQL
-- Archivos: para leer archivos del sistema
+AVAILABLE TOOLS:
+- Calculator: for mathematical operations
+- Weather: for meteorological information
+- Notes: for creating and searching notes
+- Database: for SQL queries
+- Files: for reading system files
 
-INSTRUCCIONES:
-1. Responde de forma natural y amigable
-2. Si se ejecutaron herramientas MCP, integra los resultados en tu respuesta
-3. Explica lo que hiciste y los resultados obtenidos
-4. Si hubo errores, explícalos de forma comprensible
-5. Ofrece sugerencias adicionales cuando sea apropiado
-6. Mantén un tono conversacional y útil
+INSTRUCTIONS:
+1. Respond naturally and friendly
+2. If MCP tools were executed, integrate the results in your response
+3. Explain what you did and the results obtained
+4. If there were errors, explain them comprehensibly
+5. Offer additional suggestions when appropriate
+6. Maintain a conversational and helpful tone
 
-${mcpResults ? `RESULTADOS DE HERRAMIENTAS:\n${mcpResults}` : ''}
+${mcpResults ? `TOOL RESULTS:\n${mcpResults}` : ''}
 
-Responde basándote en la información disponible y los resultados obtenidos.`;
+Respond based on available information and obtained results.`;
   }
 
   /**
-   * Genera respuesta usando OpenAI GPT
+   * Generates response using OpenAI GPT
    */
   private async generateOpenAIResponse(
     userMessage: string,
@@ -304,20 +304,20 @@ Responde basándote en la información disponible y los resultados obtenidos.`;
         { role: 'user', content: userMessage }
       ];
 
-      // Si hay resultados MCP, incluirlos como contexto adicional
+      // If there are MCP results, include them as additional context
       if (mcpResults) {
         messages.push({
           role: 'assistant',
-          content: `He ejecutado las herramientas necesarias. Aquí están los resultados:\n${mcpResults}`
+          content: `I have executed the necessary tools. Here are the results:\n${mcpResults}`
         });
         messages.push({
           role: 'user',
-          content: 'Por favor, proporciona una respuesta natural basada en estos resultados.'
+          content: 'Please provide a natural response based on these results.'
         });
       }
 
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o', // Usar el modelo más reciente
+        model: 'gpt-4o', // Use latest model
         messages,
         temperature: 0.7,
         max_tokens: 1000,
@@ -325,21 +325,21 @@ Responde basándote en la información disponible y los resultados obtenidos.`;
         frequency_penalty: 0.1
       });
 
-      return response.choices[0].message.content || 'Lo siento, no pude generar una respuesta.';
+      return response.choices[0].message.content || 'Sorry, I could not generate a response.';
 
     } catch (error) {
-      console.error('Error generando respuesta OpenAI:', error);
+      console.error('Error generating OpenAI response:', error);
 
       if (error instanceof Error && error.message.includes('API key')) {
-        throw new Error('Error de autenticación con OpenAI. Verifica tu API key.');
+        throw new Error('OpenAI authentication error. Check your API key.');
       }
 
-      throw new Error(`Error generando respuesta: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error generating response: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Obtiene estadísticas del servicio
+   * Gets service statistics
    */
   getMCPToolCallCount(): number {
     return this.toolCallCount;
@@ -352,7 +352,7 @@ Responde basándote en la información disponible y los resultados obtenidos.`;
   }
 
   /**
-   * Reinicia estadísticas
+   * Resets statistics
    */
   resetStats(): void {
     this.toolCallCount = 0;

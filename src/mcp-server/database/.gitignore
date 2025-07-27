@@ -1,6 +1,6 @@
-# === GITIGNORE PARA DATABASE ===
+# === GITIGNORE FOR DATABASE ===
 
-# Archivos de base de datos SQLite
+# SQLite database files
 *.db
 *.sqlite
 *.sqlite3
@@ -8,15 +8,15 @@ database.db
 notes.db
 mcp.db
 
-# Archivos de backup de base de datos
+# Database backup files
 *.backup
 *.bak
 *.dump
 
-# Archivos de logs de base de datos
+# Database log files
 *.db-journal
 *.db-wal
 *.db-shm
 
-# Archivos temporales de migración
+# Temporary migration files
 migrations/*.tmp

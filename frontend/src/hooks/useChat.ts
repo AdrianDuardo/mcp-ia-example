@@ -1,8 +1,8 @@
 /**
- * HOOK DE CHAT - FRONTEND
+ * CHAT HOOK - FRONTEND
  * 
- * Hook personalizado para manejar el estado del chat y la comunicación
- * con el backend. Proporciona funcionalidades completas de chat con MCP.
+ * Custom hook to handle chat state and communication
+ * with the backend. Provides complete chat functionalities with MCP.
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';

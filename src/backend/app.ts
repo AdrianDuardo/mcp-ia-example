@@ -1,17 +1,17 @@
 /**
- * BACKEND NODE.JS - TUTORIAL MCP
+ * BACKEND NODE.JS - MCP TUTORIAL
  * 
- * Este backend actúa como el ORQUESTADOR entre:
- * 1. Frontend React (chat del usuario)
- * 2. OpenAI API (modelo de lenguaje)
- * 3. Servidor MCP (herramientas y recursos)
+ * This backend acts as the ORCHESTRATOR between:
+ * 1. React Frontend (user chat)
+ * 2. OpenAI API (language model)
+ * 3. MCP Server (tools and resources)
  * 
- * 🚀 FUNCIONALIDADES:
- * - API REST para el frontend
- * - Integración con OpenAI GPT
- * - Conexión al servidor MCP
- * - Gestión de conversaciones
- * - WebSocket para tiempo real
+ * 🚀 FUNCTIONALITIES:
+ * - REST API for frontend
+ * - OpenAI GPT integration
+ * - MCP server connection
+ * - Conversation management
+ * - WebSocket for real-time
  */
 
 import express from 'express';
@@ -29,13 +29,13 @@ import type {
   ServerStats
 } from '../shared/types.js';
 
-// Cargar variables de entorno
+// Load environment variables
 dotenv.config();
 
 /**
- * CLASE PRINCIPAL DEL SERVIDOR
+ * MAIN SERVER CLASS
  * 
- * Maneja toda la lógica del backend y coordina los diferentes servicios.
+ * Handles all backend logic and coordinates different services.
  */
 class MCPBackendServer {
   private app: express.Application;
@@ -50,7 +50,7 @@ class MCPBackendServer {
     this.app = express();
     this.startTime = Date.now();
 
-    // Inicializar servicios
+    // Initialize services
     this.mcpClient = new MCPClientService();
     this.chatService = new ChatService(this.mcpClient);
     this.conversationManager = new ConversationManager();
@@ -60,7 +60,7 @@ class MCPBackendServer {
   }
 
   /**
-   * Configura middleware del servidor Express
+   * Configures Express server middleware
    */
   private setupMiddleware(): void {
     // CORS para permitir acceso desde el frontend
@@ -79,49 +79,49 @@ class MCPBackendServer {
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true }));
 
-    // Logging de requests
+    // Request logging
     this.app.use((req, res, next) => {
       console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.get('Origin')}`);
       next();
     });
 
-    // Manejo de errores global
+    // Global error handling
     this.app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-      console.error('Error en servidor:', error);
+      console.error('Server error:', error);
       res.status(500).json({
         success: false,
-        error: 'Error interno del servidor',
+        error: 'Internal server error',
         message: error.message
       } as ApiResponse);
     });
   }
 
   /**
-   * Configura las rutas de la API
+   * Configures API routes
    */
   private setupRoutes(): void {
-    // === RUTA PRINCIPAL ===
+    // === MAIN ROUTE ===
     this.app.get('/', (req, res) => {
       res.json({
         success: true,
-        message: 'MCP Backend Server funcionando correctamente',
+        message: 'MCP Backend Server working correctly',
         version: '1.0.0',
         uptime: Date.now() - this.startTime,
         endpoints: [
-          'GET  / - Esta información',
-          'POST /api/chat - Enviar mensaje al chat',
-          'GET  /api/conversations/:id - Obtener conversación',
-          'GET  /api/mcp/tools - Listar herramientas MCP',
-          'GET  /api/mcp/resources - Listar recursos MCP',
-          'GET  /api/mcp/prompts - Listar prompts MCP',
-          'GET  /api/stats - Estadísticas del servidor'
+          'GET  / - This information',
+          'POST /api/chat - Send message to chat',
+          'GET  /api/conversations/:id - Get conversation',
+          'GET  /api/mcp/tools - List MCP tools',
+          'GET  /api/mcp/resources - List MCP resources',
+          'GET  /api/mcp/prompts - List MCP prompts',
+          'GET  /api/stats - Server statistics'
         ]
       } as ApiResponse);
     });
 
-    // === RUTAS DE CHAT ===
+    // === CHAT ROUTES ===
 
-    // Enviar mensaje al chat
+    // Send message to chat
     this.app.post('/api/chat', async (req, res) => {
       try {
         const chatRequest: ChatRequest = req.body;
@@ -129,23 +129,23 @@ class MCPBackendServer {
         if (!chatRequest.message?.trim()) {
           return res.status(400).json({
             success: false,
-            error: 'El mensaje no puede estar vacío'
+            error: 'Message cannot be empty'
           } as ApiResponse);
         }
 
-        // Procesar mensaje con el servicio de chat
+        // Process message with chat service
         const response = await this.chatService.processMessage(
           chatRequest.message,
           chatRequest.conversationId
         );
 
-        // Guardar conversación
+        // Save conversation
         await this.conversationManager.updateConversation(
           response.conversationId,
           response.message
         );
 
-        // Enviar respuesta por WebSocket si hay conexiones
+        // Send response via WebSocket if there are connections
         this.broadcastToWebSocket({
           type: 'chat_response',
           data: response
@@ -157,15 +157,15 @@ class MCPBackendServer {
         } as ApiResponse<ChatResponse>);
 
       } catch (error) {
-        console.error('Error procesando mensaje:', error);
+        console.error('Error processing message:', error);
         res.status(500).json({
           success: false,
-          error: error instanceof Error ? error.message : 'Error procesando mensaje'
+          error: error instanceof Error ? error.message : 'Error processing message'
         } as ApiResponse);
       }
     });
 
-    // Obtener conversación específica
+    // Get specific conversation
     this.app.get('/api/conversations/:id', async (req, res) => {
       try {
         const { id } = req.params;
@@ -174,7 +174,7 @@ class MCPBackendServer {
         if (!conversation) {
           return res.status(404).json({
             success: false,
-            error: 'Conversación no encontrada'
+            error: 'Conversation not found'
           } as ApiResponse);
         }
 
@@ -184,17 +184,17 @@ class MCPBackendServer {
         } as ApiResponse);
 
       } catch (error) {
-        console.error('Error obteniendo conversación:', error);
+        console.error('Error getting conversation:', error);
         res.status(500).json({
           success: false,
-          error: 'Error obteniendo conversación'
+          error: 'Error getting conversation'
         } as ApiResponse);
       }
     });
 
-    // === RUTAS DE MCP ===
+    // === MCP ROUTES ===
 
-    // Listar herramientas MCP disponibles
+    // List available MCP tools
     this.app.get('/api/mcp/tools', async (req, res) => {
       try {
         const tools = await this.mcpClient.listTools();
@@ -205,12 +205,12 @@ class MCPBackendServer {
       } catch (error) {
         res.status(500).json({
           success: false,
-          error: 'Error obteniendo herramientas MCP'
+          error: 'Error getting MCP tools'
         } as ApiResponse);
       }
     });
 
-    // Listar recursos MCP disponibles
+    // List available MCP resources
     this.app.get('/api/mcp/resources', async (req, res) => {
       try {
         const resources = await this.mcpClient.listResources();
@@ -221,12 +221,12 @@ class MCPBackendServer {
       } catch (error) {
         res.status(500).json({
           success: false,
-          error: 'Error obteniendo recursos MCP'
+          error: 'Error getting MCP resources'
         } as ApiResponse);
       }
     });
 
-    // Listar prompts MCP disponibles
+    // List available MCP prompts
     this.app.get('/api/mcp/prompts', async (req, res) => {
       try {
         const prompts = await this.mcpClient.listPrompts();
@@ -237,12 +237,12 @@ class MCPBackendServer {
       } catch (error) {
         res.status(500).json({
           success: false,
-          error: 'Error obteniendo prompts MCP'
+          error: 'Error getting MCP prompts'
         } as ApiResponse);
       }
     });
 
-    // === RUTA DE ESTADÍSTICAS ===
+    // === STATISTICS ROUTE ===
     this.app.get('/api/stats', async (req, res) => {
       try {
         const stats: ServerStats = {
@@ -261,16 +261,16 @@ class MCPBackendServer {
       } catch (error) {
         res.status(500).json({
           success: false,
-          error: 'Error obteniendo estadísticas'
+          error: 'Error getting statistics'
         } as ApiResponse);
       }
     });
 
-    // === RUTA DE HEALTH CHECK ===
+    // === HEALTH CHECK ROUTE ===
     this.app.get('/api/health', (req, res) => {
       res.json({
         success: true,
-        message: 'Servidor funcionando correctamente',
+        message: 'Server working correctly',
         timestamp: new Date().toISOString(),
         uptime: Date.now() - this.startTime
       } as ApiResponse);
@@ -278,51 +278,51 @@ class MCPBackendServer {
   }
 
   /**
-   * Configura WebSocket para comunicación en tiempo real
+   * Configures WebSocket for real-time communication
    */
   private setupWebSocket(): void {
     this.wss = new WebSocketServer({ server: this.server });
 
     this.wss.on('connection', (ws, req) => {
-      console.log('Nueva conexión WebSocket desde:', req.socket.remoteAddress);
+      console.log('New WebSocket connection from:', req.socket.remoteAddress);
 
-      // Enviar mensaje de bienvenida
+      // Send welcome message
       ws.send(JSON.stringify({
         type: 'welcome',
-        message: 'Conectado al servidor MCP'
+        message: 'Connected to MCP server'
       }));
 
-      // Manejar mensajes del cliente
+      // Handle client messages
       ws.on('message', async (data) => {
         try {
           const message = JSON.parse(data.toString());
-          console.log('Mensaje WebSocket recibido:', message);
+          console.log('WebSocket message received:', message);
 
-          // Aquí podrías manejar diferentes tipos de mensajes WebSocket
+          // Here you could handle different types of WebSocket messages
           if (message.type === 'ping') {
             ws.send(JSON.stringify({ type: 'pong' }));
           }
         } catch (error) {
-          console.error('Error procesando mensaje WebSocket:', error);
+          console.error('Error processing WebSocket message:', error);
         }
       });
 
-      // Manejar desconexión
+      // Handle disconnection
       ws.on('close', () => {
-        console.log('Conexión WebSocket cerrada');
+        console.log('WebSocket connection closed');
       });
 
-      // Manejar errores
+      // Handle errors
       ws.on('error', (error) => {
-        console.error('Error en WebSocket:', error);
+        console.error('WebSocket error:', error);
       });
     });
 
-    console.log('✅ WebSocket server configurado');
+    console.log('✅ WebSocket server configured');
   }
 
   /**
-   * Envía mensaje a todas las conexiones WebSocket
+   * Sends message to all WebSocket connections
    */
   private broadcastToWebSocket(message: any): void {
     if (!this.wss) return;
@@ -335,31 +335,31 @@ class MCPBackendServer {
   }
 
   /**
-   * Inicializa el servidor y todos los servicios
+   * Initializes the server and all services
    */
   async initialize(): Promise<void> {
     try {
-      console.log('🚀 Inicializando backend MCP...');
+      console.log('🚀 Initializing MCP backend...');
 
-      // Conectar al servidor MCP
+      // Connect to MCP server
       await this.mcpClient.connect();
-      console.log('✅ Cliente MCP conectado');
+      console.log('✅ MCP client connected');
 
-      // Crear servidor HTTP
+      // Create HTTP server
       this.server = createServer(this.app);
 
-      // Configurar WebSocket
+      // Configure WebSocket
       this.setupWebSocket();
 
-      console.log('✅ Backend MCP inicializado correctamente');
+      console.log('✅ MCP backend initialized correctly');
     } catch (error) {
-      console.error('❌ Error inicializando backend:', error);
+      console.error('❌ Error initializing backend:', error);
       throw error;
     }
   }
 
   /**
-   * Inicia el servidor en el puerto especificado
+   * Starts the server on the specified port
    */
   async start(): Promise<void> {
     const port = parseInt(process.env.PORT || '3001');
@@ -367,45 +367,45 @@ class MCPBackendServer {
     await this.initialize();
 
     this.server.listen(port, () => {
-      console.log(`🎉 Servidor backend ejecutándose en puerto ${port}`);
-      console.log(`📡 WebSocket disponible en ws://localhost:${port}`);
-      console.log(`📋 API disponible en http://localhost:${port}/api`);
-      console.log(`🔧 Panel de admin en http://localhost:${port}/`);
+      console.log(`🎉 Backend server running on port ${port}`);
+      console.log(`📡 WebSocket available at ws://localhost:${port}`);
+      console.log(`📋 API available at http://localhost:${port}/api`);
+      console.log(`🔧 Admin panel at http://localhost:${port}/`);
     });
 
-    // Manejar cierre graceful
+    // Handle graceful shutdown
     process.on('SIGINT', async () => {
-      console.log('🛑 Cerrando servidor...');
+      console.log('🛑 Closing server...');
 
-      // Cerrar conexiones WebSocket
+      // Close WebSocket connections
       if (this.wss) {
         this.wss.close();
       }
 
-      // Cerrar cliente MCP
+      // Close MCP client
       await this.mcpClient.disconnect();
 
-      // Cerrar servidor HTTP
+      // Close HTTP server
       this.server.close(() => {
-        console.log('✅ Servidor cerrado correctamente');
+        console.log('✅ Server closed correctly');
         process.exit(0);
       });
     });
   }
 }
 
-// === INICIALIZACIÓN ===
+// === INITIALIZATION ===
 
-// Validar variables de entorno requeridas
+// Validate required environment variables
 if (!process.env.OPENAI_API_KEY) {
-  console.error('❌ Error: OPENAI_API_KEY no está configurada');
-  console.error('📝 Crea un archivo .env con tu API key de OpenAI');
+  console.error('❌ Error: OPENAI_API_KEY is not configured');
+  console.error('📝 Create a .env file with your OpenAI API key');
   process.exit(1);
 }
 
-// Crear y iniciar servidor
+// Create and start server
 const server = new MCPBackendServer();
 server.start().catch((error) => {
-  console.error('❌ Error fatal iniciando servidor:', error);
+  console.error('❌ Fatal error starting server:', error);
   process.exit(1);
 });

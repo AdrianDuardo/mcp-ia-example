@@ -1,8 +1,8 @@
 /**
- * HOOK MCP - FRONTEND
+ * MCP HOOK - FRONTEND
  * 
- * Hook personalizado para manejar herramientas, recursos y prompts MCP.
- * Proporciona acceso a todas las capacidades del servidor MCP.
+ * Custom hook to handle MCP tools, resources and prompts.
+ * Provides methods to load, search and validate MCP data.
  */
 
 import { useState, useEffect, useCallback } from 'react';

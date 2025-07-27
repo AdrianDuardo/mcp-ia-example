@@ -1,8 +1,8 @@
 /**
- * APLICACIÓN PRINCIPAL - FRONTEND
+ * MAIN APPLICATION - FRONTEND
  * 
- * Componente raíz de la aplicación React que integra
- * el chat con MCP y todas las funcionalidades.
+ * Root React component that integrates
+ * the chat with MCP and all functionalities.
  */
 
 import { Chat } from './components/Chat';

@@ -1,11 +1,11 @@
 /**
- * TIPOS PARA EL FRONTEND - TUTORIAL MCP
+ * FRONTEND TYPES - MCP TUTORIAL
  * 
- * Definiciones de tipos TypeScript específicas para el frontend React.
- * Reutiliza tipos del backend y añade tipos específicos de UI.
+ * TypeScript type definitions specific for the React frontend.
+ * Reuses backend types and adds UI-specific types.
  */
 
-// === TIPOS DE MENSAJES DE CHAT ===
+// === CHAT MESSAGE TYPES ===
 
 export interface ChatMessage {
   id: string;
@@ -30,7 +30,7 @@ export interface ChatResponse {
   mcpActions?: MCPAction[];
 }
 
-// === TIPOS DE ACCIONES MCP ===
+// === MCP ACTION TYPES ===
 
 export interface MCPAction {
   type: 'tool_call' | 'resource_read' | 'prompt_get';
@@ -40,7 +40,7 @@ export interface MCPAction {
   error?: string;
 }
 
-// === TIPOS DE HERRAMIENTAS MCP ===
+// === MCP TOOLS TYPES ===
 
 export interface MCPTool {
   name: string;
@@ -69,7 +69,7 @@ export interface MCPPromptArgument {
   required: boolean;
 }
 
-// === TIPOS DE RESPUESTAS DE API ===
+// === API RESPONSE TYPES ===
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -78,7 +78,7 @@ export interface ApiResponse<T = unknown> {
   message?: string;
 }
 
-// === TIPOS DE ESTADO DE LA APLICACIÓN ===
+// === APPLICATION STATE TYPES ===
 
 export interface AppState {
   isConnected: boolean;
@@ -90,7 +90,7 @@ export interface AppState {
   availablePrompts: MCPPrompt[];
 }
 
-// === TIPOS DE COMPONENTES UI ===
+// === UI COMPONENT TYPES ===
 
 export interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -117,7 +117,7 @@ export interface StatsDisplayProps {
   stats: ServerStats;
 }
 
-// === TIPOS DE ESTADÍSTICAS ===
+// === STATISTICS TYPES ===
 
 export interface ServerStats {
   uptime: number;
@@ -128,7 +128,7 @@ export interface ServerStats {
   activeConnections: number;
 }
 
-// === TIPOS DE EVENTOS ===
+// === EVENT TYPES ===
 
 export interface WebSocketMessage {
   type: 'welcome' | 'chat_response' | 'error' | 'ping' | 'pong';
@@ -137,7 +137,7 @@ export interface WebSocketMessage {
   error?: string;
 }
 
-// === TIPOS DE CONFIGURACIÓN ===
+// === CONFIGURATION TYPES ===
 
 export interface ApiConfig {
   baseUrl: string;
@@ -145,7 +145,7 @@ export interface ApiConfig {
   retries: number;
 }
 
-// === TIPOS DE HOOKS ===
+// === HOOK TYPES ===
 
 export interface UseChatReturn {
   messages: ChatMessage[];
@@ -172,7 +172,7 @@ export interface UseMCPReturn {
   refreshMCPData: () => Promise<void>;
 }
 
-// === TIPOS DE UTILIDADES ===
+// === UTILITY TYPES ===
 
 export interface FormattedTime {
   hours: number;
@@ -188,7 +188,7 @@ export interface MessageAction {
   onClick: (message: ChatMessage) => void;
 }
 
-// === CONSTANTES DE TIPOS ===
+// === TYPE CONSTANTS ===
 
 export const MESSAGE_ROLES = ['user', 'assistant', 'system'] as const;
 export const MCP_ACTION_TYPES = ['tool_call', 'resource_read', 'prompt_get'] as const;

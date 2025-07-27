@@ -1,26 +1,26 @@
 /**
- * SERVICIO DE ARCHIVOS - TUTORIAL MCP
+ * FILE SERVICE - MCP TUTORIAL
  * 
- * Este servicio demuestra cómo MCP puede acceder al sistema de archivos
- * de forma segura y controlada.
+ * This service demonstrates how MCP can access the file system
+ * in a secure and controlled way.
  * 
- * 📁 FUNCIONALIDADES:
- * - Lectura de archivos con validaciones de seguridad
- * - Escritura de archivos en directorio seguro
- * - Listado de archivos
- * - Validación de extensiones permitidas
+ * 📁 FEATURES:
+ * - File reading with security validations
+ * - File writing in secure directory
+ * - File listing
+ * - Allowed extensions validation
  */
 
 import { promises as fs } from 'fs';
 import path from 'path';
 
 export interface FileInfo {
-  nombre: string;
-  ruta: string;
-  tamaño: number;
+  name: string;
+  path: string;
+  size: number;
   extension: string;
-  fechaModificacion: string;
-  esDirectorio: boolean;
+  modificationDate: string;
+  isDirectory: boolean;
 }
 
 export class FileService {
@@ -29,144 +29,144 @@ export class FileService {
   private maxFileSize: number;
 
   constructor() {
-    // Directorio base seguro para operaciones de archivos
+    // Secure base directory for file operations
     this.basePath = path.join(process.cwd(), 'data');
 
-    // Extensiones permitidas por seguridad
+    // Allowed extensions for security
     this.allowedExtensions = new Set([
       '.txt', '.md', '.json', '.csv', '.log',
       '.yml', '.yaml', '.xml', '.config',
       '.js', '.ts', '.html', '.css'
     ]);
 
-    // Tamaño máximo de archivo: 10MB
+    // Maximum file size: 10MB
     this.maxFileSize = 10 * 1024 * 1024;
 
-    // Crear directorio base si no existe
+    // Create base directory if it doesn't exist
     this.ensureBaseDirectory();
   }
 
   /**
-   * Asegura que el directorio base existe
+   * Ensures the base directory exists
    */
   private async ensureBaseDirectory(): Promise<void> {
     try {
       await fs.mkdir(this.basePath, { recursive: true });
     } catch (error) {
-      console.error("Error creando directorio base:", error);
+      console.error("Error creating base directory:", error);
     }
   }
 
   /**
-   * Valida que una ruta es segura (no sale del directorio base)
+   * Validates that a path is secure (doesn't exit the base directory)
    */
   private validatePath(filePath: string): string {
-    // Resolver la ruta absoluta
+    // Resolve absolute path
     const absolutePath = path.resolve(this.basePath, filePath);
 
-    // Verificar que no sale del directorio base
+    // Verify it doesn't exit the base directory
     if (!absolutePath.startsWith(this.basePath)) {
-      throw new Error("Acceso denegado: La ruta está fuera del directorio permitido");
+      throw new Error("Access denied: Path is outside the allowed directory");
     }
 
     return absolutePath;
   }
 
   /**
-   * Valida que una extensión está permitida
+   * Validates that an extension is allowed
    */
   private validateExtension(filePath: string): void {
     const extension = path.extname(filePath).toLowerCase();
 
     if (!this.allowedExtensions.has(extension)) {
-      throw new Error(`Extensión no permitida: ${extension}. Extensiones permitidas: ${Array.from(this.allowedExtensions).join(', ')}`);
+      throw new Error(`Extension not allowed: ${extension}. Allowed extensions: ${Array.from(this.allowedExtensions).join(', ')}`);
     }
   }
 
   /**
-   * Lee el contenido de un archivo
+   * Reads the content of a file
    */
   async readFile(relativePath: string): Promise<string> {
     try {
       const absolutePath = this.validatePath(relativePath);
       this.validateExtension(absolutePath);
 
-      // Verificar que el archivo existe
+      // Verify the file exists
       const stats = await fs.stat(absolutePath);
 
       if (stats.isDirectory()) {
-        throw new Error("La ruta especificada es un directorio, no un archivo");
+        throw new Error("The specified path is a directory, not a file");
       }
 
-      // Verificar tamaño
+      // Verify size
       if (stats.size > this.maxFileSize) {
-        throw new Error(`Archivo demasiado grande: ${Math.round(stats.size / 1024 / 1024)}MB. Máximo permitido: ${Math.round(this.maxFileSize / 1024 / 1024)}MB`);
+        throw new Error(`File too large: ${Math.round(stats.size / 1024 / 1024)}MB. Maximum allowed: ${Math.round(this.maxFileSize / 1024 / 1024)}MB`);
       }
 
-      // Leer archivo
+      // Read file
       const content = await fs.readFile(absolutePath, 'utf-8');
 
-      console.error(`📖 Archivo leído: ${relativePath} (${stats.size} bytes)`);
+      console.error(`📖 File read: ${relativePath} (${stats.size} bytes)`);
       return content;
 
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('ENOENT')) {
-          throw new Error(`Archivo no encontrado: ${relativePath}`);
+          throw new Error(`File not found: ${relativePath}`);
         } else if (error.message.includes('EACCES')) {
-          throw new Error(`Sin permisos para leer el archivo: ${relativePath}`);
+          throw new Error(`No permissions to read file: ${relativePath}`);
         }
         throw error;
       }
-      throw new Error(`Error leyendo archivo: ${error}`);
+      throw new Error(`Error reading file: ${error}`);
     }
   }
 
   /**
-   * Escribe contenido a un archivo
+   * Writes content to a file
    */
   async writeFile(relativePath: string, content: string): Promise<void> {
     try {
       const absolutePath = this.validatePath(relativePath);
       this.validateExtension(absolutePath);
 
-      // Crear directorio padre si no existe
+      // Create parent directory if it doesn't exist
       const directory = path.dirname(absolutePath);
       await fs.mkdir(directory, { recursive: true });
 
-      // Verificar tamaño del contenido
+      // Verify content size
       const contentSize = Buffer.byteLength(content, 'utf-8');
       if (contentSize > this.maxFileSize) {
-        throw new Error(`Contenido demasiado grande: ${Math.round(contentSize / 1024 / 1024)}MB. Máximo permitido: ${Math.round(this.maxFileSize / 1024 / 1024)}MB`);
+        throw new Error(`Content too large: ${Math.round(contentSize / 1024 / 1024)}MB. Maximum allowed: ${Math.round(this.maxFileSize / 1024 / 1024)}MB`);
       }
 
-      // Escribir archivo
+      // Write file
       await fs.writeFile(absolutePath, content, 'utf-8');
 
-      console.error(`💾 Archivo escrito: ${relativePath} (${contentSize} bytes)`);
+      console.error(`💾 File written: ${relativePath} (${contentSize} bytes)`);
 
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('EACCES')) {
-          throw new Error(`Sin permisos para escribir el archivo: ${relativePath}`);
+          throw new Error(`No permissions to write file: ${relativePath}`);
         }
         throw error;
       }
-      throw new Error(`Error escribiendo archivo: ${error}`);
+      throw new Error(`Error writing file: ${error}`);
     }
   }
 
   /**
-   * Lista archivos en un directorio
+   * Lists files in a directory
    */
   async listFiles(relativePath: string = ''): Promise<FileInfo[]> {
     try {
       const absolutePath = this.validatePath(relativePath);
 
-      // Verificar que el directorio existe
+      // Verify the directory exists
       const stats = await fs.stat(absolutePath);
       if (!stats.isDirectory()) {
-        throw new Error("La ruta especificada no es un directorio");
+        throw new Error("The specified path is not a directory");
       }
 
       const files = await fs.readdir(absolutePath);
@@ -178,48 +178,48 @@ export class FileService {
           const fileStats = await fs.stat(filePath);
           const extension = path.extname(file).toLowerCase();
 
-          // Solo incluir archivos con extensiones permitidas o directorios
+          // Only include files with allowed extensions or directories
           if (fileStats.isDirectory() || this.allowedExtensions.has(extension)) {
             fileInfos.push({
-              nombre: file,
-              ruta: path.relative(this.basePath, filePath),
-              tamaño: fileStats.size,
+              name: file,
+              path: path.relative(this.basePath, filePath),
+              size: fileStats.size,
               extension: extension,
-              fechaModificacion: fileStats.mtime.toISOString(),
-              esDirectorio: fileStats.isDirectory()
+              modificationDate: fileStats.mtime.toISOString(),
+              isDirectory: fileStats.isDirectory()
             });
           }
         } catch (error) {
-          // Continuar con el siguiente archivo si hay error
-          console.error(`Error obteniendo info de ${file}:`, error);
+          // Continue with next file if there's an error
+          console.error(`Error getting info for ${file}:`, error);
         }
       }
 
-      // Ordenar: directorios primero, luego archivos alfabéticamente
+      // Sort: directories first, then files alphabetically
       fileInfos.sort((a, b) => {
-        if (a.esDirectorio && !b.esDirectorio) return -1;
-        if (!a.esDirectorio && b.esDirectorio) return 1;
-        return a.nombre.localeCompare(b.nombre);
+        if (a.isDirectory && !b.isDirectory) return -1;
+        if (!a.isDirectory && b.isDirectory) return 1;
+        return a.name.localeCompare(b.name);
       });
 
-      console.error(`📁 Listados ${fileInfos.length} elementos en: ${relativePath || '/'}`);
+      console.error(`📁 Listed ${fileInfos.length} elements in: ${relativePath || '/'}`);
       return fileInfos;
 
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes('ENOENT')) {
-          throw new Error(`Directorio no encontrado: ${relativePath}`);
+          throw new Error(`Directory not found: ${relativePath}`);
         } else if (error.message.includes('EACCES')) {
-          throw new Error(`Sin permisos para acceder al directorio: ${relativePath}`);
+          throw new Error(`No permissions to access directory: ${relativePath}`);
         }
         throw error;
       }
-      throw new Error(`Error listando archivos: ${error}`);
+      throw new Error(`Error listing files: ${error}`);
     }
   }
 
   /**
-   * Verifica si un archivo existe
+   * Checks if a file exists
    */
   async fileExists(relativePath: string): Promise<boolean> {
     try {
@@ -232,7 +232,7 @@ export class FileService {
   }
 
   /**
-   * Obtiene información de un archivo
+   * Gets file information
    */
   async getFileInfo(relativePath: string): Promise<FileInfo> {
     try {
@@ -240,73 +240,73 @@ export class FileService {
       const stats = await fs.stat(absolutePath);
 
       return {
-        nombre: path.basename(absolutePath),
-        ruta: relativePath,
-        tamaño: stats.size,
+        name: path.basename(absolutePath),
+        path: relativePath,
+        size: stats.size,
         extension: path.extname(absolutePath).toLowerCase(),
-        fechaModificacion: stats.mtime.toISOString(),
-        esDirectorio: stats.isDirectory()
+        modificationDate: stats.mtime.toISOString(),
+        isDirectory: stats.isDirectory()
       };
     } catch (error) {
       if (error instanceof Error && error.message.includes('ENOENT')) {
-        throw new Error(`Archivo no encontrado: ${relativePath}`);
+        throw new Error(`File not found: ${relativePath}`);
       }
-      throw new Error(`Error obteniendo información del archivo: ${error}`);
+      throw new Error(`Error getting file information: ${error}`);
     }
   }
 
   /**
-   * Crea algunos archivos de ejemplo para demostración
+   * Creates some example files for demonstration
    */
   async createExampleFiles(): Promise<void> {
     const examples = [
       {
-        path: 'ejemplo.txt',
-        content: 'Este es un archivo de ejemplo creado por el servidor MCP.\n\nPuedes leer este contenido usando la herramienta de archivos.'
+        path: 'example.txt',
+        content: 'This is an example file created by the MCP server.\n\nYou can read this content using the file tools.'
       },
       {
         path: 'config.json',
         content: JSON.stringify({
-          aplicacion: "MCP Tutorial",
+          application: "MCP Tutorial",
           version: process.env.MCP_SERVER_VERSION || "1.0.0",
-          configuracion: {
+          configuration: {
             debug: true,
-            puerto: process.env.PORT || 3001,
-            baseDatos: process.env.DATABASE_PATH || "tutorial.sqlite"
+            port: process.env.PORT || 3001,
+            database: process.env.DATABASE_PATH || "tutorial.sqlite"
           },
-          caracteristicas: [
-            "Servidor MCP",
-            "Integración OpenAI",
-            "Frontend React",
-            "Base de datos SQLite"
+          features: [
+            "MCP Server",
+            "OpenAI Integration",
+            "React Frontend",
+            "SQLite Database"
           ]
         }, null, 2)
       },
       {
-        path: 'notas.md',
-        content: `# Notas del Tutorial MCP
+        path: 'notes.md',
+        content: `# MCP Tutorial Notes
 
-## ¿Qué es MCP?
+## What is MCP?
 
-Model Context Protocol (MCP) es un protocolo estándar que permite a los modelos de IA interactuar con herramientas y datos externos.
+Model Context Protocol (MCP) is a standard protocol that allows AI models to interact with external tools and data.
 
-## Conceptos Clave
+## Key Concepts
 
-- **Servidor MCP**: Expone herramientas, recursos y prompts
-- **Cliente MCP**: Consume los servicios del servidor
-- **Herramientas**: Acciones que el modelo puede ejecutar
-- **Recursos**: Datos que el modelo puede leer
-- **Prompts**: Plantillas reutilizables
+- **MCP Server**: Exposes tools, resources and prompts
+- **MCP Client**: Consumes server services
+- **Tools**: Actions the model can execute
+- **Resources**: Data the model can read
+- **Prompts**: Reusable templates
 
-## Este Tutorial Incluye
+## This Tutorial Includes
 
-1. 🧮 Calculadora matemática
-2. 🌤️ Información del clima
-3. 📝 Sistema de notas
-4. 🗄️ Consultas a base de datos
-5. 📁 Manejo de archivos
+1. 🧮 Mathematical calculator
+2. 🌤️ Weather information
+3. 📝 Notes system
+4. 🗄️ Database queries
+5. 📁 File management
 
-¡Prueba todas las herramientas desde el chat!
+Try all the tools from the chat!
 `
       }
     ];
@@ -316,23 +316,23 @@ Model Context Protocol (MCP) es un protocolo estándar que permite a los modelos
         const exists = await this.fileExists(example.path);
         if (!exists) {
           await this.writeFile(example.path, example.content);
-          console.error(`📝 Archivo de ejemplo creado: ${example.path}`);
+          console.error(`📝 Example file created: ${example.path}`);
         }
       } catch (error) {
-        console.error(`Error creando archivo de ejemplo ${example.path}:`, error);
+        console.error(`Error creating example file ${example.path}:`, error);
       }
     }
   }
 
   /**
-   * Obtiene las extensiones permitidas
+   * Gets allowed extensions
    */
   getAllowedExtensions(): string[] {
     return Array.from(this.allowedExtensions);
   }
 
   /**
-   * Obtiene la ruta base
+   * Gets base path
    */
   getBasePath(): string {
     return this.basePath;

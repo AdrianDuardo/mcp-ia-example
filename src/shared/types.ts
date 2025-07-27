@@ -5,7 +5,7 @@
  * el servidor MCP, backend y frontend.
  */
 
-// === TIPOS DE MENSAJES DE CHAT ===
+// === CHAT MESSAGE TYPES ===
 
 export interface ChatMessage {
   id: string;
@@ -40,7 +40,7 @@ export interface MCPAction {
   error?: string;
 }
 
-// === TIPOS DE HERRAMIENTAS MCP ===
+// === MCP TOOLS TYPES ===
 
 export interface MCPTool {
   name: string;
@@ -69,16 +69,16 @@ export interface MCPPromptArgument {
   required: boolean;
 }
 
-// === TIPOS DE RESPUESTAS DE API ===
+// === API RESPONSE TYPES ===
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
 }
 
-// === TIPOS DE CONFIGURACIÓN ===
+// === CONFIGURATION TYPES ===
 
 export interface ServerConfig {
   port: number;

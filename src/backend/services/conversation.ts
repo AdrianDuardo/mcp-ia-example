@@ -1,14 +1,14 @@
 /**
- * GESTOR DE CONVERSACIONES - TUTORIAL MCP
+ * CONVERSATION MANAGER - MCP TUTORIAL
  * 
- * Este servicio maneja el estado de las conversaciones del chat.
- * Mantiene el contexto y historial de cada conversación.
+ * This service manages chat conversation state.
+ * Maintains context and history for each conversation.
  * 
- * 💾 FUNCIONALIDADES:
- * - Almacena conversaciones en memoria
- * - Mantiene historial de mensajes
- * - Gestiona múltiples conversaciones simultáneas
- * - Estadísticas y análisis
+ * 💾 FUNCTIONALITIES:
+ * - Stores conversations in memory
+ * - Maintains message history
+ * - Manages multiple simultaneous conversations
+ * - Statistics and analytics
  */
 
 import { v4 as uuidv4 } from 'uuid';
@@ -19,20 +19,20 @@ import type {
 
 export class ConversationManager {
   private conversations: Map<string, ConversationContext> = new Map();
-  private maxConversations: number = 100; // Límite de conversaciones en memoria
-  private maxMessagesPerConversation: number = 50; // Límite de mensajes por conversación
+  private maxConversations: number = 100; // Conversation limit in memory
+  private maxMessagesPerConversation: number = 50; // Message limit per conversation
 
   constructor() {
-    console.log('💬 Gestor de conversaciones inicializado');
+    console.log('💬 Conversation manager initialized');
 
-    // Limpiar conversaciones antiguas cada hora
+    // Clean old conversations every hour
     setInterval(() => {
       this.cleanupOldConversations();
     }, 60 * 60 * 1000);
   }
 
   /**
-   * Crea una nueva conversación o obtiene una existente
+   * Creates a new conversation or gets an existing one
    */
   async getOrCreateConversation(conversationId?: string): Promise<ConversationContext> {
     if (conversationId && this.conversations.has(conversationId)) {
@@ -41,7 +41,7 @@ export class ConversationManager {
       return conversation;
     }
 
-    // Crear nueva conversación
+    // Create new conversation
     const newId = conversationId || uuidv4();
     const conversation: ConversationContext = {
       id: newId,
@@ -57,17 +57,17 @@ export class ConversationManager {
 
     this.conversations.set(newId, conversation);
 
-    // Limpiar conversaciones si excedemos el límite
+    // Clean conversations if we exceed the limit
     if (this.conversations.size > this.maxConversations) {
       this.cleanupOldConversations();
     }
 
-    console.log(`📝 Nueva conversación creada: ${newId}`);
+    console.log(`📝 New conversation created: ${newId}`);
     return conversation;
   }
 
   /**
-   * Obtiene una conversación específica
+   * Gets a specific conversation
    */
   async getConversation(conversationId: string): Promise<ConversationContext | null> {
     const conversation = this.conversations.get(conversationId);
@@ -80,27 +80,27 @@ export class ConversationManager {
   }
 
   /**
-   * Actualiza una conversación con un nuevo mensaje
+   * Updates a conversation with a new message
    */
   async updateConversation(conversationId: string, message: ChatMessage): Promise<void> {
     const conversation = await this.getOrCreateConversation(conversationId);
 
-    // Agregar mensaje al historial
+    // Add message to history
     conversation.messages.push(message);
 
-    // Limitar número de mensajes por conversación
+    // Limit number of messages per conversation
     if (conversation.messages.length > this.maxMessagesPerConversation) {
-      // Mantener solo los mensajes más recientes
+      // Keep only the most recent messages
       conversation.messages = conversation.messages.slice(-this.maxMessagesPerConversation);
     }
 
     conversation.lastActivity = new Date().toISOString();
 
-    console.log(`💬 Mensaje agregado a conversación ${conversationId}: ${message.role}`);
+    console.log(`💬 Message added to conversation ${conversationId}: ${message.role}`);
   }
 
   /**
-   * Agrega múltiples mensajes a una conversación
+   * Adds multiple messages to a conversation
    */
   async addMessages(conversationId: string, messages: ChatMessage[]): Promise<void> {
     for (const message of messages) {
@@ -109,7 +109,7 @@ export class ConversationManager {
   }
 
   /**
-   * Obtiene el historial de mensajes de una conversación
+   * Gets conversation message history
    */
   async getConversationHistory(conversationId: string, limit?: number): Promise<ChatMessage[]> {
     const conversation = await this.getConversation(conversationId);
@@ -128,20 +128,20 @@ export class ConversationManager {
   }
 
   /**
-   * Elimina una conversación
+   * Deletes a conversation
    */
   async deleteConversation(conversationId: string): Promise<boolean> {
     const deleted = this.conversations.delete(conversationId);
 
     if (deleted) {
-      console.log(`🗑️ Conversación eliminada: ${conversationId}`);
+      console.log(`🗑️ Conversation deleted: ${conversationId}`);
     }
 
     return deleted;
   }
 
   /**
-   * Lista todas las conversaciones
+   * Lists all conversations
    */
   async listConversations(): Promise<ConversationContext[]> {
     return Array.from(this.conversations.values())
@@ -149,14 +149,14 @@ export class ConversationManager {
   }
 
   /**
-   * Busca conversaciones por contenido
+   * Searches conversations by content
    */
   async searchConversations(query: string): Promise<ConversationContext[]> {
     const searchTerm = query.toLowerCase();
     const results: ConversationContext[] = [];
 
     for (const conversation of this.conversations.values()) {
-      // Buscar en mensajes
+      // Search in messages
       const hasMatch = conversation.messages.some(message =>
         message.content.toLowerCase().includes(searchTerm)
       );
@@ -166,14 +166,14 @@ export class ConversationManager {
       }
     }
 
-    // Ordenar por actividad más reciente
+    // Sort by most recent activity
     return results.sort((a, b) =>
       new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime()
     );
   }
 
   /**
-   * Actualiza el estado MCP de una conversación
+   * Updates MCP state of a conversation
    */
   async updateMCPState(
     conversationId: string,
@@ -185,11 +185,11 @@ export class ConversationManager {
   }
 
   /**
-   * Limpia conversaciones antiguas
+   * Cleans up old conversations
    */
   private cleanupOldConversations(): void {
     const now = Date.now();
-    const maxAge = 24 * 60 * 60 * 1000; // 24 horas
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
     let cleaned = 0;
 
     for (const [id, conversation] of this.conversations) {
@@ -201,7 +201,7 @@ export class ConversationManager {
       }
     }
 
-    // Si aún hay demasiadas conversaciones, eliminar las más antiguas
+    // If there are still too many conversations, delete the oldest ones
     if (this.conversations.size > this.maxConversations) {
       const sorted = Array.from(this.conversations.entries())
         .sort((a, b) =>
@@ -217,12 +217,12 @@ export class ConversationManager {
     }
 
     if (cleaned > 0) {
-      console.log(`🧹 ${cleaned} conversaciones antiguas eliminadas`);
+      console.log(`🧹 ${cleaned} old conversations deleted`);
     }
   }
 
   /**
-   * Obtiene estadísticas de conversaciones
+   * Gets conversation statistics
    */
   async getStats(): Promise<{
     totalConversations: number;
@@ -234,7 +234,7 @@ export class ConversationManager {
   }> {
     const conversations = Array.from(this.conversations.values());
     const now = Date.now();
-    const activeThreshold = 60 * 60 * 1000; // 1 hora
+    const activeThreshold = 60 * 60 * 1000; // 1 hour
 
     const totalMessages = conversations.reduce(
       (sum, conv) => sum + conv.messages.length,
@@ -270,14 +270,14 @@ export class ConversationManager {
   }
 
   /**
-   * Obtiene el número total de conversaciones
+   * Gets total number of conversations
    */
   async getTotalConversations(): Promise<number> {
     return this.conversations.size;
   }
 
   /**
-   * Obtiene el número total de mensajes
+   * Gets total number of messages
    */
   async getTotalMessages(): Promise<number> {
     let total = 0;
@@ -288,7 +288,7 @@ export class ConversationManager {
   }
 
   /**
-   * Exporta una conversación a JSON
+   * Exports a conversation to JSON
    */
   async exportConversation(conversationId: string): Promise<string | null> {
     const conversation = await this.getConversation(conversationId);
@@ -301,13 +301,13 @@ export class ConversationManager {
   }
 
   /**
-   * Limpia todas las conversaciones
+   * Clears all conversations
    */
   async clearAllConversations(): Promise<number> {
     const count = this.conversations.size;
     this.conversations.clear();
 
-    console.log(`🧹 Todas las conversaciones eliminadas (${count})`);
+    console.log(`🧹 All conversations deleted (${count})`);
     return count;
   }
 }

@@ -1,8 +1,8 @@
 /**
- * SERVICIO DE API - FRONTEND
+ * API SERVICE - FRONTEND
  * 
- * Este servicio maneja toda la comunicación HTTP con el backend.
- * Proporciona métodos para chat, MCP y estadísticas.
+ * This service handles all HTTP communication with the backend.
+ * Provides methods for chat, MCP and statistics.
  */
 
 import axios from 'axios';
@@ -25,11 +25,11 @@ class ApiService {
   constructor() {
     this.config = {
       baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001',
-      timeout: 30000, // 30 segundos
+      timeout: 30000, // 30 seconds
       retries: 3
     };
 
-    // Configurar axios
+    // Configure axios
     this.api = axios.create({
       baseURL: this.config.baseUrl,
       timeout: this.config.timeout,
@@ -38,12 +38,12 @@ class ApiService {
       },
     });
 
-    // Configurar interceptors
+    // Setup interceptors
     this.setupInterceptors();
   }
 
   /**
-   * Configura los interceptors para el manejo de errores y logs
+   * Sets up interceptors for error handling and logging
    */
   private setupInterceptors(): void {
     // Request interceptor
@@ -53,7 +53,7 @@ class ApiService {
         return config;
       },
       (error) => {
-        console.error('❌ Error en request:', error);
+        console.error('❌ Request error:', error);
         return Promise.reject(error);
       }
     );
@@ -65,9 +65,9 @@ class ApiService {
         return response;
       },
       async (error) => {
-        console.error('❌ Error en response:', error);
+        console.error('❌ Response error:', error);
 
-        // Si es un error de red, intentar retry
+        // If it's a network error, try retry
         if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNABORTED') {
           return this.retryRequest(() => this.api.request(error.config));
         }
@@ -78,16 +78,16 @@ class ApiService {
   }
 
   /**
-   * Reintenta una petición fallida
+   * Retries a failed request
    */
   private async retryRequest<T>(originalRequest: () => Promise<T>, retryCount = 0): Promise<T> {
     if (retryCount >= this.config.retries) {
-      throw new Error('Máximo número de reintentos alcanzado');
+      throw new Error('Maximum number of retries reached');
     }
 
-    console.log(`🔄 Reintentando petición (${retryCount + 1}/${this.config.retries})...`);
+    console.log(`🔄 Retrying request (${retryCount + 1}/${this.config.retries})...`);
 
-    // Esperar antes de reintentar
+    // Wait before retrying
     await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
 
     try {
@@ -98,112 +98,112 @@ class ApiService {
   }
 
   // ===============================
-  // MÉTODOS DE CHAT
+  // CHAT METHODS
   // ===============================
 
   /**
-   * Envía un mensaje al chat
+   * Sends a message to chat
    */
   async sendMessage(request: ChatRequest): Promise<ChatResponse> {
     try {
       const response = await this.api.post<ApiResponse<ChatResponse>>('/api/chat', request);
       if (!response.data.data) {
-        throw new Error('No se recibió respuesta del servidor');
+        throw new Error('No response received from server');
       }
       return response.data.data;
     } catch (error) {
-      console.error('Error enviando mensaje:', error);
+      console.error('Error sending message:', error);
       throw error;
     }
   }
 
   /**
-   * Obtiene el historial de mensajes
+   * Gets message history
    */
   async getMessages(): Promise<ChatResponse[]> {
     try {
       const response = await this.api.get<ApiResponse<ChatResponse[]>>('/api/chat/messages');
       return response.data.data || [];
     } catch (error) {
-      console.error('Error obteniendo mensajes:', error);
+      console.error('Error getting messages:', error);
       throw error;
     }
   }
 
   /**
-   * Limpia el historial de chat
+   * Clears chat history
    */
   async clearMessages(): Promise<void> {
     try {
       await this.api.delete('/api/chat/messages');
     } catch (error) {
-      console.error('Error limpiando mensajes:', error);
+      console.error('Error clearing messages:', error);
       throw error;
     }
   }
 
   // ===============================
-  // MÉTODOS DE MCP
+  // MCP METHODS
   // ===============================
 
   /**
-   * Obtiene la lista de herramientas MCP disponibles
+   * Gets the list of available MCP tools
    */
   async getMCPTools(): Promise<MCPTool[]> {
     try {
       const response = await this.api.get<ApiResponse<MCPTool[]>>('/api/mcp/tools');
       return response.data.data || [];
     } catch (error) {
-      console.error('Error obteniendo herramientas MCP:', error);
+      console.error('Error getting MCP tools:', error);
       throw error;
     }
   }
 
   /**
-   * Obtiene la lista de recursos MCP disponibles
+   * Gets the list of available MCP resources
    */
   async getMCPResources(): Promise<MCPResource[]> {
     try {
       const response = await this.api.get<ApiResponse<MCPResource[]>>('/api/mcp/resources');
       return response.data.data || [];
     } catch (error) {
-      console.error('Error obteniendo recursos MCP:', error);
+      console.error('Error getting MCP resources:', error);
       throw error;
     }
   }
 
   /**
-   * Obtiene la lista de prompts MCP disponibles
+   * Gets the list of available MCP prompts
    */
   async getMCPPrompts(): Promise<MCPPrompt[]> {
     try {
       const response = await this.api.get<ApiResponse<MCPPrompt[]>>('/api/mcp/prompts');
       return response.data.data || [];
     } catch (error) {
-      console.error('Error obteniendo prompts MCP:', error);
+      console.error('Error getting MCP prompts:', error);
       throw error;
     }
   }
 
   /**
-   * Ejecuta una herramienta MCP específica
+   * Executes a specific MCP tool
    */
   async callMCPTool(toolName: string, args: Record<string, unknown>): Promise<unknown> {
     try {
       const response = await this.api.post(`/api/mcp/tools/${toolName}`, { args });
       return response.data;
     } catch (error) {
-      console.error(`Error ejecutando herramienta ${toolName}:`, error);
+      console.error(`Error executing tool ${toolName}:`, error);
       throw error;
     }
   }
 
   // ===============================
-  // MÉTODOS DE ESTADÍSTICAS
+  // STATISTICS METHODS
   // ===============================
 
   /**
-   * Obtiene estadísticas del servidor
+   * Gets server statistics
    */
   async getServerStats(): Promise<ServerStats> {
     try {
@@ -217,17 +217,17 @@ class ApiService {
         activeConnections: 0
       };
     } catch (error) {
-      console.error('Error obteniendo estadísticas:', error);
+      console.error('Error getting statistics:', error);
       throw error;
     }
   }
 
   // ===============================
-  // MÉTODOS AUXILIARES
+  // HELPER METHODS
   // ===============================
 
   /**
-   * Verifica la salud del servidor
+   * Checks server health
    */
   async checkHealth(): Promise<boolean> {
     try {

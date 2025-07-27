@@ -295,7 +295,7 @@ export class NotesService {
   private async createExampleNotes(): Promise<void> {
     try {
       const existingNotes = await this.dbService.getOne("SELECT COUNT(*) as count FROM notes");
-      
+
       if (existingNotes.count === 0) {
         const exampleNotes = [
           {

@@ -10,19 +10,8 @@
  * 
  * WHAT DOES THIS SERVER DO?
  * - Exposes mathematical, weather, notes, etc. tools
- * - Provides access to an SQLite d/**
- * STEP 5: SERVER INITIALIZATION
- * 
- * Finally, we initialize all services and connect the server
- * using stdio transport (standard input/output).
- */
-async function initializeServer() {
-  try {
-    console.error("🚀 Starting MCP server...");
-
-    // Initialize database
-    await dbService.initialize();
-    console.error("✅ Database initialized");Allows file reading and dynamic resources
+ * - Provides access to an SQLite database
+ * - Allows file reading and dynamic resources
  * - Defines reusable prompts for different tasks
  */
 
@@ -291,78 +280,78 @@ server.registerTool(
 );
 
 /**
- * PASO 3: DEFINIR RECURSOS (RESOURCES)
+ * STEP 3: DEFINE RESOURCES
  * 
- * Los recursos son DATOS que el modelo puede leer.
- * Piensa en ellos como "archivos" o "endpoints" de solo lectura.
+ * Resources are DATA that the model can read.
+ * Think of them as "files" or read-only "endpoints".
  * 
- * Pueden ser:
- * - Estáticos: siempre devuelven lo mismo
- * - Dinámicos: cambian según parámetros
+ * They can be:
+ * - Static: always return the same thing
+ * - Dynamic: change based on parameters
  */
 
-// 📊 RECURSO ESTÁTICO: Información del servidor
+// 📊 STATIC RESOURCE: Server information
 server.registerResource(
   "server-info",
   "mcp://server/info",
   {
-    title: "📊 Información del Servidor",
-    description: "Información básica sobre este servidor MCP",
+    title: "📊 Server Information",
+    description: "Basic information about this MCP server",
     mimeType: "application/json"
   },
   async (uri) => ({
     contents: [{
       uri: uri.href,
       text: JSON.stringify({
-        nombre: process.env.MCP_SERVER_NAME || "Tutorial MCP Server",
+        name: process.env.MCP_SERVER_NAME || "Tutorial MCP Server",
         version: process.env.MCP_SERVER_VERSION || "1.0.0",
-        descripcion: "Servidor de ejemplo para aprender MCP",
-        herramientas: ["calculadora", "clima", "notas", "sql"],
-        autor: "Tutorial MCP",
-        fechaCreacion: new Date().toISOString()
+        description: "Example server for learning MCP",
+        tools: ["calculator", "weather", "notes", "sql"],
+        author: "MCP Tutorial",
+        creationDate: new Date().toISOString()
       }, null, 2)
     }]
   })
 );
 
-// 📁 RECURSO DINÁMICO: Archivos
+// 📁 DYNAMIC RESOURCE: Files
 server.registerResource(
-  "archivo",
-  new ResourceTemplate("file://{ruta}", { list: undefined }),
+  "file",
+  new ResourceTemplate("file://{path}", { list: undefined }),
   {
-    title: "📁 Lector de Archivos",
-    description: "Lee el contenido de archivos del sistema"
+    title: "📁 File Reader",
+    description: "Reads content from system files"
   },
-  async (uri, { ruta }) => {
+  async (uri, { path }) => {
     try {
-      // Asegurar que ruta es un string
-      const rutaArchivo = Array.isArray(ruta) ? ruta[0] : ruta;
-      const contenido = await fileService.readFile(rutaArchivo);
+      // Ensure path is a string
+      const filePath = Array.isArray(path) ? path[0] : path;
+      const content = await fileService.readFile(filePath);
       return {
         contents: [{
           uri: uri.href,
-          text: contenido
+          text: content
         }]
       };
     } catch (error) {
-      throw new Error(`No se pudo leer el archivo: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Could not read file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 );
 
-// 📊 RECURSO DINÁMICO: Estadísticas de base de datos
+// 📊 DYNAMIC RESOURCE: Database statistics
 server.registerResource(
   "db-stats",
-  new ResourceTemplate("db://stats/{tabla}", { list: undefined }),
+  new ResourceTemplate("db://stats/{table}", { list: undefined }),
   {
-    title: "📊 Estadísticas de Base de Datos",
-    description: "Obtiene estadísticas de tablas de la base de datos"
+    title: "📊 Database Statistics",
+    description: "Gets statistics from database tables"
   },
-  async (uri, { tabla }) => {
+  async (uri, { table }) => {
     try {
-      // Asegurar que tabla es un string
-      const nombreTabla = Array.isArray(tabla) ? tabla[0] : tabla;
-      const stats = await dbService.getTableStats(nombreTabla);
+      // Ensure table is a string
+      const tableName = Array.isArray(table) ? table[0] : table;
+      const stats = await dbService.getTableStats(tableName);
       return {
         contents: [{
           uri: uri.href,
@@ -370,122 +359,122 @@ server.registerResource(
         }]
       };
     } catch (error) {
-      throw new Error(`No se pudieron obtener estadísticas: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Could not get statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 );
 
 /**
- * PASO 4: DEFINIR PROMPTS
+ * STEP 4: DEFINE PROMPTS
  * 
- * Los prompts son PLANTILLAS reutilizables para interacciones comunes.
- * Ayudan a estandarizar cómo el modelo interactúa con las herramientas.
+ * Prompts are reusable TEMPLATES for common interactions.
+ * They help standardize how the model interacts with tools.
  */
 
-// 💬 PROMPT: Análisis de datos
+// 💬 PROMPT: Data analysis
 server.registerPrompt(
-  "analizar_datos",
+  "analyze_data",
   {
-    title: "📊 Análisis de Datos",
-    description: "Plantilla para analizar datos usando las herramientas disponibles",
+    title: "📊 Data Analysis",
+    description: "Template for analyzing data using available tools",
     argsSchema: {
-      dataset: z.string({ description: "Descripción del conjunto de datos a analizar" }),
-      objetivo: z.string({ description: "Objetivo del análisis" }).optional()
+      dataset: z.string({ description: "Description of the dataset to analyze" }),
+      objective: z.string({ description: "Analysis objective" }).optional()
     }
   },
-  ({ dataset, objetivo }) => ({
+  ({ dataset, objective }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Analiza el siguiente conjunto de datos: ${dataset}
+        text: `Analyze the following dataset: ${dataset}
 
-${objetivo ? `Objetivo del análisis: ${objetivo}` : ''}
+${objective ? `Analysis objective: ${objective}` : ''}
 
-Por favor:
-1. Examina los datos disponibles usando las herramientas SQL
-2. Calcula estadísticas relevantes con la calculadora
-3. Identifica patrones importantes
-4. Proporciona insights y conclusiones
-5. Crea una nota con el resumen del análisis
+Please:
+1. Examine available data using SQL tools
+2. Calculate relevant statistics with the calculator
+3. Identify important patterns
+4. Provide insights and conclusions
+5. Create a note with the analysis summary
 
-Usa las herramientas MCP disponibles para realizar un análisis completo.`
+Use available MCP tools to perform a complete analysis.`
       }
     }]
   })
 );
 
-// 🌤️ PROMPT: Reporte del clima
+// 🌤️ PROMPT: Weather report
 server.registerPrompt(
-  "reporte_clima",
+  "weather_report",
   {
-    title: "🌤️ Reporte Meteorológico",
-    description: "Genera un reporte completo del clima para una ubicación",
+    title: "🌤️ Weather Report",
+    description: "Generate a complete weather report for a location",
     argsSchema: {
-      ciudad: z.string({ description: "Ciudad principal para el reporte" }),
-      incluir_consejos: z.string({ description: "Incluir consejos (si/no)" }).optional()
+      city: z.string({ description: "Main city for the report" }),
+      include_tips: z.string({ description: "Include tips (yes/no)" }).optional()
     }
   },
-  ({ ciudad, incluir_consejos }) => ({
+  ({ city, include_tips }) => ({
     messages: [{
       role: "user",
       content: {
         type: "text",
-        text: `Genera un reporte meteorológico completo para la ciudad: ${ciudad}
+        text: `Generate a complete weather report for the city: ${city}
 
-Por favor:
-1. Obtén información actual del clima para la ciudad
-2. Analiza las condiciones meteorológicas
-3. ${incluir_consejos === 'si' ? 'Proporciona consejos útiles basados en las condiciones' : ''}
-4. Crea una nota con el reporte completo
+Please:
+1. Get current weather information for the city
+2. Analyze weather conditions
+3. ${include_tips === 'yes' ? 'Provide useful tips based on conditions' : ''}
+4. Create a note with the complete report
 
-Usa la herramienta de clima y otras herramientas disponibles.`
+Use the weather tool and other available tools.`
       }
     }]
   })
 );
 
 /**
- * PASO 5: INICIALIZAR Y CONECTAR EL SERVIDOR
+ * STEP 5: INITIALIZE AND CONNECT THE SERVER
  * 
- * Finalmente, inicializamos todos los servicios y conectamos el servidor
- * usando el transporte stdio (entrada/salida estándar).
+ * Finally, we initialize all services and connect the server
+ * using the stdio transport (standard input/output).
  */
-async function inicializarServidor() {
+async function initializeServer() {
   try {
-    console.error("🚀 Iniciando servidor MCP...");
+    console.error("🚀 Starting MCP server...");
 
-    // Inicializar base de datos
+    // Initialize database
     await dbService.initialize();
-    console.error("✅ Base de datos inicializada");
+    console.error("✅ Database initialized");
 
-    // Inicializar servicios
+    // Initialize services
     await notesService.initialize();
-    console.error("✅ Servicio de notas inicializado");
+    console.error("✅ Notes service initialized");
 
-    // Crear transporte stdio
+    // Create stdio transport
     const transport = new StdioServerTransport();
 
-    // Conectar servidor
+    // Connect server
     await server.connect(transport);
 
-    console.error("🎉 Servidor MCP iniciado exitosamente!");
-    console.error("📋 Herramientas disponibles: calculadora, clima, notas, SQL");
-    console.error("📊 Recursos disponibles: info del servidor, archivos, estadísticas DB");
-    console.error("💬 Prompts disponibles: análisis de datos, reporte del clima");
+    console.error("🎉 MCP server started successfully!");
+    console.error("📋 Available tools: calculator, weather, notes, SQL");
+    console.error("📊 Available resources: server info, files, DB statistics");
+    console.error("💬 Available prompts: data analysis, weather report");
 
   } catch (error) {
-    console.error("❌ Error iniciando servidor MCP:", error);
+    console.error("❌ Error starting MCP server:", error);
     process.exit(1);
   }
 }
 
-// Manejar cierre graceful
+// Handle graceful shutdown
 process.on('SIGINT', async () => {
-  console.error("🛑 Cerrando servidor MCP...");
+  console.error("🛑 Closing MCP server...");
   await dbService.close();
   process.exit(0);
 });
 
-// Iniciar el servidor
-inicializarServidor().catch(console.error);
+// Start the server
+initializeServer().catch(console.error);

@@ -1,8 +1,8 @@
 /**
- * COMPONENTE CHAT - FRONTEND
+ * CHAT COMPONENT - FRONTEND
  * 
- * Componente principal del chat que integra MCP con OpenAI.
- * Demuestra todas las capacidades del servidor MCP.
+ * Main chat component that integrates MCP with OpenAI.
+ * Demonstrates all MCP server capabilities.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -22,7 +22,7 @@ export const Chat: React.FC = () => {
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   
-  // Hook de chat
+  // Chat hook
   const {
     messages,
     isLoading,
@@ -39,7 +39,7 @@ export const Chat: React.FC = () => {
   } = useMCP();
 
   /**
-   * Manejador para envío de mensajes
+   * Message submission handler
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,12 +52,12 @@ export const Chat: React.FC = () => {
     try {
       await sendMessage(userMessage);
     } catch (error) {
-      console.error('❌ Error enviando mensaje:', error);
+      console.error('❌ Error sending message:', error);
     }
   };
 
   /**
-   * Manejo de teclas especiales
+   * Special key handling
    */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -67,7 +67,7 @@ export const Chat: React.FC = () => {
   };
 
   /**
-   * Enfocar input al cargar
+   * Focus input on load
    */
   useEffect(() => {
     if (inputRef.current) {
@@ -76,18 +76,18 @@ export const Chat: React.FC = () => {
   }, []);
 
   /**
-   * Ejemplos de prompts predefinidos
+   * Predefined prompt examples
    */
   const examplePrompts = [
-    '🧮 Calcula la raíz cuadrada de 144',
-    '🌤️ ¿Qué tiempo hace en Madrid?',
-    '📝 Crea una nota sobre MCP',
-    '📊 Ejecuta una consulta SQL: SELECT * FROM usuarios LIMIT 5',
-    '📁 Lista los archivos del directorio actual'
+    '🧮 Calculate the square root of 144',
+    '🌤️ What\'s the weather like in Madrid?',
+    '📝 Create a note about MCP',
+    '📊 Execute SQL query: SELECT * FROM users LIMIT 5',
+    '📁 List files in current directory'
   ];
 
   /**
-   * Inserta un prompt de ejemplo
+   * Insert example prompt
    */
   const insertExamplePrompt = (prompt: string) => {
     setMessage(prompt);
@@ -97,10 +97,10 @@ export const Chat: React.FC = () => {
   };
 
   /**
-   * Categorización de herramientas
+   * Tool categorization
    */
   const toolCategories = tools.reduce((acc, tool) => {
-    // Simplificar categorización por nombre de herramienta
+    // Simplify categorization by tool name
     const category = tool.name.includes('calc') ? 'calculator' : 
                     tool.name.includes('weather') ? 'weather' : 
                     tool.name.includes('note') ? 'notes' : 
@@ -114,32 +114,32 @@ export const Chat: React.FC = () => {
   }, {} as Record<string, MCPTool[]>);
 
   /**
-   * Estadísticas completas de la conversación
+   * Complete conversation statistics
    */
   const conversationStats = {
     totalMessages: messages.length,
     userMessages: messages.filter(m => m.role === 'user').length,
     assistantMessages: messages.filter(m => m.role === 'assistant').length,
-    mcpActions: messages.filter(m => m.content?.includes('MCP') || m.content?.includes('herramienta')).length,
+    mcpActions: messages.filter(m => m.content?.includes('MCP') || m.content?.includes('tool')).length,
     errors: error ? 1 : 0,
-    conversationId: null // TODO: Implementar conversationId cuando esté disponible
+    conversationId: null // TODO: Implement conversationId when available
   };
 
   const mcpStats = {
     totalTools: tools.length,
     totalResources: resources.length,
-    totalPrompts: 0, // TODO: Implementar cuando tengamos prompts
+    totalPrompts: 0, // TODO: Implement when we have prompts
     categorizedTools: Object.keys(toolCategories).length,
     resourceTypes: new Set(resources.map(r => r.mimeType || 'unknown')).size,
-    promptsWithArgs: 0 // TODO: Implementar cuando tengamos prompts
+    promptsWithArgs: 0 // TODO: Implement when we have prompts
   };
 
   /**
-   * Limpiar conversación
+   * Clear conversation
    */
   const clearConversation = () => {
-    // TODO: Implementar limpieza de conversación
-    console.log('Limpiar conversación');
+    // TODO: Implement conversation clearing
+    console.log('Clear conversation');
   };
 
   return (
@@ -158,7 +158,7 @@ export const Chat: React.FC = () => {
           <button
             onClick={() => setShowMCPTools(!showMCPTools)}
             className={`toggle-button ${showMCPTools ? 'active' : ''}`}
-            title="Mostrar herramientas MCP"
+            title="Show MCP tools"
           >
             <Settings className="icon" />
             MCP Tools
@@ -167,29 +167,29 @@ export const Chat: React.FC = () => {
           <button
             onClick={clearConversation}
             className="clear-button"
-            title="Limpiar conversación"
+            title="Clear conversation"
           >
-            Limpiar
+            Clear
           </button>
         </div>
       </div>
 
       <div className="chat-content">
-        {/* Panel lateral MCP */}
+        {/* MCP sidebar */}
         {showMCPTools && (
           <div className="mcp-sidebar">
             <div className="sidebar-section">
-              <h3>🔧 Herramientas Disponibles</h3>
+              <h3>🔧 Available Tools</h3>
               {mcpLoading ? (
                 <div className="loading-state">
                   <Loader2 className="icon spinning" />
-                  <span>Cargando herramientas...</span>
+                  <span>Loading tools...</span>
                 </div>
               ) : mcpError ? (
                 <div className="error-state">
                   <span>❌ Error: {mcpError}</span>
                   <button onClick={refreshMCPData} className="retry-button">
-                    Reintentar
+                    Retry
                   </button>
                 </div>
               ) : (
@@ -213,10 +213,10 @@ export const Chat: React.FC = () => {
               )}
             </div>
 
-            {/* Recursos */}
+            {/* Resources */}
             {resources.length > 0 && (
               <div className="sidebar-section">
-                <h3>📊 Recursos</h3>
+                <h3>📊 Resources</h3>
                 <div className="resources-list">
                   {resources.slice(0, 5).map(resource => (
                     <MCPResourceCard
@@ -228,7 +228,7 @@ export const Chat: React.FC = () => {
               </div>
             )}
 
-            {/* Estadísticas */}
+            {/* Statistics */}
             <StatsPanel
               conversationStats={conversationStats}
               mcpStats={mcpStats}
@@ -236,49 +236,49 @@ export const Chat: React.FC = () => {
           </div>
         )}
 
-        {/* Área principal del chat */}
+        {/* Main chat area */}
         <div className="chat-main">
-          {/* Lista de mensajes */}
+          {/* Message list */}
           <div className="messages-container">
             {messages.length === 0 ? (
               <div className="welcome-state">
                 <div className="welcome-content">
-                  <h2>¡Bienvenido al MCP Chat Assistant! 👋</h2>
+                  <h2>Welcome to MCP Chat Assistant! 👋</h2>
                   <p>
-                    Este chat está integrado con el <strong>Model Context Protocol (MCP)</strong> 
-                    y permite interactuar con múltiples herramientas y servicios.
+                    This chat is integrated with the <strong>Model Context Protocol (MCP)</strong> 
+                    and allows interaction with multiple tools and services.
                   </p>
                   
                   <div className="features-grid">
                     <div className="feature-card">
                       <span>🧮</span>
-                      <h3>Calculadora</h3>
-                      <p>Operaciones matemáticas avanzadas</p>
+                      <h3>Calculator</h3>
+                      <p>Advanced mathematical operations</p>
                     </div>
                     <div className="feature-card">
                       <span>🌤️</span>
-                      <h3>Clima</h3>
-                      <p>Información meteorológica en tiempo real</p>
+                      <h3>Weather</h3>
+                      <p>Real-time weather information</p>
                     </div>
                     <div className="feature-card">
                       <span>📝</span>
-                      <h3>Notas</h3>
-                      <p>Gestión de notas y documentos</p>
+                      <h3>Notes</h3>
+                      <p>Note and document management</p>
                     </div>
                     <div className="feature-card">
                       <span>📊</span>
-                      <h3>Base de Datos</h3>
-                      <p>Consultas SQL dinámicas</p>
+                      <h3>Database</h3>
+                      <p>Dynamic SQL queries</p>
                     </div>
                     <div className="feature-card">
                       <span>📁</span>
-                      <h3>Archivos</h3>
-                      <p>Navegación del sistema de archivos</p>
+                      <h3>Files</h3>
+                      <p>File system navigation</p>
                     </div>
                   </div>
 
                   <div className="examples-section">
-                    <h3>💡 Prueba estos ejemplos:</h3>
+                    <h3>💡 Try these examples:</h3>
                     <div className="examples-grid">
                       {examplePrompts.map((prompt, index) => (
                         <button
@@ -301,7 +301,7 @@ export const Chat: React.FC = () => {
             )}
           </div>
 
-          {/* Formulario de entrada */}
+          {/* Input form */}
           <div className="input-container">
             {error && (
               <div className="error-message">
@@ -315,7 +315,7 @@ export const Chat: React.FC = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Escribe tu mensaje aquí... (Enter para enviar, Shift+Enter para nueva línea)"
+                placeholder="Type your message here... (Enter to send, Shift+Enter for new line)"
                 className="message-input"
                 rows={3}
                 disabled={isLoading}
@@ -336,8 +336,8 @@ export const Chat: React.FC = () => {
             
             <div className="input-info">
               <span>
-                {tools.length} herramientas MCP disponibles • 
-                {messages.length} mensajes en la conversación
+                {tools.length} MCP tools available • 
+                {messages.length} messages in conversation
               </span>
             </div>
           </div>

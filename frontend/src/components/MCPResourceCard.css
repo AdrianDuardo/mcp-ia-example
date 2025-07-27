@@ -1,8 +1,8 @@
 /**
- * ESTILOS MCP RESOURCE CARD - FRONTEND
+ * MCP RESOURCE CARD STYLES - FRONTEND
  * 
- * Estilos para las tarjetas de recursos MCP
- * con iconos, tipos y acciones de recursos.
+ * Styles for MCP resource cards
+ * with icons, types and resource actions.
  */
 
 .mcp-resource-card {
@@ -181,7 +181,7 @@
   color: white;
 }
 
-/* Estados especiales */
+/* Special states */
 .mcp-resource-card.orange .resource-icon {
   background: var(--orange-bg, #fff7ed);
   color: var(--orange-color, #ea580c);
