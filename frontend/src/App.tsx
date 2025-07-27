@@ -5,7 +5,7 @@
  * el chat con MCP y todas las funcionalidades.
  */
 
-import { Chat } from './components/ChatSimple';
+import { Chat } from './components/Chat';
 import './App.css';
 
 function App() {

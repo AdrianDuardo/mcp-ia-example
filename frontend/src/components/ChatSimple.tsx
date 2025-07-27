@@ -50,7 +50,7 @@ export const Chat: React.FC = () => {
       const assistantMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.message?.content || 'Lo siento, no pude procesar tu mensaje.'
+        content: data.data?.message?.content || 'Lo siento, no pude procesar tu mensaje.'
       };
 
       setMessages(prev => [...prev, assistantMessage]);

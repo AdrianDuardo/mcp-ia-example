@@ -144,6 +144,13 @@ Formato requerido:
   "category": "calculadora|clima|notas|database|archivos|general"
 }
 
+PARÁMETROS EXACTOS por herramienta:
+- calculadora: {"operacion": "suma|resta|multiplicacion|division", "numero1": number, "numero2": number}
+- obtener_clima: {"ciudad": "string", "pais": "string (opcional)"}
+- crear_nota: {"titulo": "string", "contenido": "string", "categoria": "string (opcional)"}
+- buscar_notas: {"query": "string (opcional)", "categoria": "string (opcional)", "limite": number}
+- ejecutar_sql: {"sql": "string"}
+
 Ejemplos:
 - Para "calcula 15 + 30":
 {"needsMCPTools": true, "suggestedTools": [{"name": "calculadora", "arguments": {"operacion": "suma", "numero1": 15, "numero2": 30}}], "category": "calculadora"}
@@ -153,6 +160,9 @@ Ejemplos:
 
 - Para "clima en Madrid":
 {"needsMCPTools": true, "suggestedTools": [{"name": "obtener_clima", "arguments": {"ciudad": "Madrid"}}], "category": "clima"}
+
+- Para "muestra los usuarios de la base de datos":
+{"needsMCPTools": true, "suggestedTools": [{"name": "ejecutar_sql", "arguments": {"sql": "SELECT * FROM usuarios"}}], "category": "database"}
 `;
 
       const response = await this.openai.chat.completions.create({
