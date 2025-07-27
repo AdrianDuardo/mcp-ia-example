@@ -233,7 +233,149 @@ server.registerTool(
   }
 );
 
-// 🗄️ TOOL: DATABASE QUERY
+// � TOOL: GET NOTE BY ID
+server.registerTool(
+  "get_note",
+  {
+    title: "📖 Get Note by ID",
+    description: "Gets a specific note by its ID",
+    inputSchema: {
+      id: z.number({ description: "Note ID" })
+    }
+  },
+  async ({ id }) => {
+    try {
+      const note = await notesService.getNoteById(id);
+
+      if (!note) {
+        return {
+          content: [{
+            type: "text",
+            text: `📖 Note with ID ${id} not found`
+          }]
+        };
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: `📖 **${note.title}** (ID: ${note.id})
+📁 Category: ${note.category || 'Uncategorized'}
+📅 Created: ${note.creationDate}
+📅 Modified: ${note.lastModified}
+
+💬 **Content:**
+${note.content}`
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `❌ Error getting note: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// ✏️ TOOL: UPDATE NOTE
+server.registerTool(
+  "update_note",
+  {
+    title: "✏️ Update Note",
+    description: "Updates an existing note with new title, content or category",
+    inputSchema: {
+      id: z.number({ description: "Note ID to update" }),
+      title: z.string({ description: "New note title" }).optional(),
+      content: z.string({ description: "New note content" }).optional(),
+      category: z.string({ description: "New note category" }).optional()
+    }
+  },
+  async ({ id, title, content, category }) => {
+    try {
+      const updates: any = {};
+      if (title !== undefined) updates.title = title;
+      if (content !== undefined) updates.content = content;
+      if (category !== undefined) updates.category = category;
+
+      if (Object.keys(updates).length === 0) {
+        return {
+          content: [{
+            type: "text",
+            text: "❌ No fields provided to update. Please specify title, content, or category."
+          }],
+          isError: true
+        };
+      }
+
+      const note = await notesService.updateNote(id, updates);
+      return {
+        content: [{
+          type: "text",
+          text: `✏️ Note updated successfully:
+🆔 ID: ${note.id}
+📋 Title: ${note.title}
+📁 Category: ${note.category || 'Uncategorized'}
+📅 Last Modified: ${note.lastModified}`
+        }]
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `❌ Error updating note: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// 🗑️ TOOL: DELETE NOTE
+server.registerTool(
+  "delete_note",
+  {
+    title: "🗑️ Delete Note",
+    description: "Deletes a note by its ID",
+    inputSchema: {
+      id: z.number({ description: "Note ID to delete" })
+    }
+  },
+  async ({ id }) => {
+    try {
+      const deleted = await notesService.deleteNote(id);
+
+      if (deleted) {
+        return {
+          content: [{
+            type: "text",
+            text: `🗑️ Note with ID ${id} deleted successfully`
+          }]
+        };
+      } else {
+        return {
+          content: [{
+            type: "text",
+            text: `❌ Note with ID ${id} not found or could not be deleted`
+          }],
+          isError: true
+        };
+      }
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: `❌ Error deleting note: ${error instanceof Error ? error.message : 'Unknown error'}`
+        }],
+        isError: true
+      };
+    }
+  }
+);
+
+// �🗄️ TOOL: DATABASE QUERY
 server.registerTool(
   "execute_sql",
   {
@@ -307,7 +449,7 @@ server.registerResource(
         name: process.env.MCP_SERVER_NAME || "Tutorial MCP Server",
         version: process.env.MCP_SERVER_VERSION || "1.0.0",
         description: "Example server for learning MCP",
-        tools: ["calculator", "weather", "notes", "sql"],
+        tools: ["calculator", "weather", "notes (CRUD)", "sql"],
         author: "MCP Tutorial",
         creationDate: new Date().toISOString()
       }, null, 2)
@@ -460,7 +602,7 @@ async function initializeServer() {
     await server.connect(transport);
 
     console.error("🎉 MCP server started successfully!");
-    console.error("📋 Available tools: calculator, weather, notes, SQL");
+    console.error("📋 Available tools: calculator, weather, notes (CRUD), SQL");
     console.error("📊 Available resources: server info, files, DB statistics");
     console.error("💬 Available prompts: data analysis, weather report");
 

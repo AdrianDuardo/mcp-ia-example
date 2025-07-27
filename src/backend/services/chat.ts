@@ -149,6 +149,9 @@ EXACT PARAMETERS by tool:
 - get_weather: {"city": "string", "country": "string (optional)"}
 - create_note: {"title": "string", "content": "string", "category": "string (optional)"}
 - search_notes: {"query": "string (optional)", "category": "string (optional)", "limit": number}
+- get_note: {"id": number}
+- update_note: {"id": number, "title": "string (optional)", "content": "string (optional)", "category": "string (optional)"}
+- delete_note: {"id": number}
 - execute_sql: {"sql": "string"}
 
 Examples:
@@ -163,6 +166,15 @@ Examples:
 
 - For "show database users":
 {"needsMCPTools": true, "suggestedTools": [{"name": "execute_sql", "arguments": {"sql": "SELECT * FROM users"}}], "category": "database"}
+
+- For "get note 5" or "show note with id 5":
+{"needsMCPTools": true, "suggestedTools": [{"name": "get_note", "arguments": {"id": 5}}], "category": "notes"}
+
+- For "update note 3 title to New Title":
+{"needsMCPTools": true, "suggestedTools": [{"name": "update_note", "arguments": {"id": 3, "title": "New Title"}}], "category": "notes"}
+
+- For "delete note 2":
+{"needsMCPTools": true, "suggestedTools": [{"name": "delete_note", "arguments": {"id": 2}}], "category": "notes"}
 `;
 
       const response = await this.openai.chat.completions.create({
@@ -322,7 +334,7 @@ Respond based on available information and obtained results, ALWAYS in the same 
       }
 
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o', // Use latest model
+        model: 'gpt-4o-mini', // Use latest model
         messages,
         temperature: 0.7,
         max_tokens: 1000,
