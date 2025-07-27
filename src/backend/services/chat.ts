@@ -355,12 +355,4 @@ Respond based on available information and obtained results, ALWAYS in the same 
     const sum = this.responseTimes.reduce((acc, time) => acc + time, 0);
     return Math.round(sum / this.responseTimes.length);
   }
-
-  /**
-   * Resets statistics
-   */
-  resetStats(): void {
-    this.toolCallCount = 0;
-    this.responseTimes = [];
-  }
 }
