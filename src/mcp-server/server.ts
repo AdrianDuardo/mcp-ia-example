@@ -1,18 +1,29 @@
 /**
- * SERVIDOR MCP PRINCIPAL - TUTORIAL COMPLETO
+ * MAIN MCP SERVER - COMPLETE TUTORIAL
  * 
- * Este archivo implementa un servidor MCP (Model Context Protocol) completo
- * que demuestra todos los conceptos fundamentales:
+ * This file implements a complete MCP (Model Context Protocol) server
+ * that demonstrates all fundamental concepts:
  * 
- * 🔧 HERRAMIENTAS (Tools): Acciones que el modelo puede ejecutar
- * 📊 RECURSOS (Resources): Datos que el modelo puede leer
- * 💬 PROMPTS: Plantillas reutilizables para interacciones
+ * 🔧 TOOLS: Actions that the model can execute
+ * 📊 RESOURCES: Data that the model can read
+ * 💬 PROMPTS: Reusable templates for interactions
  * 
- * ¿QUÉ HACE ESTE SERVIDOR?
- * - Expone herramientas matemáticas, del clima, notas, etc.
- * - Proporciona acceso a una base de datos SQLite
- * - Permite lectura de archivos y recursos dinámicos
- * - Define prompts reutilizables para diferentes tareas
+ * WHAT DOES THIS SERVER DO?
+ * - Exposes mathematical, weather, notes, etc. tools
+ * - Provides access to an SQLite d/**
+ * STEP 5: SERVER INITIALIZATION
+ * 
+ * Finally, we initialize all services and connect the server
+ * using stdio transport (standard input/output).
+ */
+async function initializeServer() {
+  try {
+    console.error("🚀 Starting MCP server...");
+
+    // Initialize database
+    await dbService.initialize();
+    console.error("✅ Database initialized");Allows file reading and dynamic resources
+ * - Defines reusable prompts for different tasks
  */
 
 import dotenv from 'dotenv';
@@ -20,7 +31,7 @@ import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mc
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-// Cargar variables de entorno
+// Load environment variables
 dotenv.config();
 import { DatabaseService } from "./database/database.js";
 import { WeatherService } from "./services/weather.js";
@@ -28,116 +39,116 @@ import { FileService } from "./services/files.js";
 import { NotesService } from "./services/notes.js";
 
 /**
- * PASO 1: CREAR EL SERVIDOR MCP
+ * STEP 1: CREATE THE MCP SERVER
  * 
- * McpServer es la clase principal que maneja toda la comunicación MCP.
- * Define el nombre y versión de nuestro servidor.
+ * McpServer is the main class that handles all MCP communication.
+ * Defines the name and version of our server.
  */
 const server = new McpServer({
   name: process.env.MCP_SERVER_NAME || "tutorial-mcp-server",
   version: process.env.MCP_SERVER_VERSION || "1.0.0"
 });
 
-// Inicializar servicios
+// Initialize services
 const dbService = new DatabaseService();
 const weatherService = new WeatherService();
 const fileService = new FileService();
 const notesService = new NotesService(dbService);
 
 /**
- * PASO 2: DEFINIR HERRAMIENTAS (TOOLS)
+ * STEP 2: DEFINE TOOLS
  * 
- * Las herramientas son ACCIONES que el modelo puede ejecutar.
- * Piensa en ellas como "funciones" que el modelo puede llamar.
+ * Tools are ACTIONS that the model can execute.
+ * Think of them as "functions" that the model can call.
  * 
- * Cada herramienta tiene:
- * - name: identificador único
- * - title: nombre mostrado al usuario
- * - description: qué hace la herramienta
- * - inputSchema: qué parámetros necesita (validación con Zod)
- * - handler: función que ejecuta la acción
+ * Each tool has:
+ * - name: unique identifier
+ * - title: name shown to user
+ * - description: what the tool does
+ * - inputSchema: what parameters it needs (Zod validation)
+ * - handler: function that executes the action
  */
 
-// 🧮 HERRAMIENTA: CALCULADORA
+// 🧮 TOOL: CALCULATOR
 server.registerTool(
-  "calculadora",
+  "calculator",
   {
-    title: "🧮 Calculadora Matemática",
-    description: "Realiza operaciones matemáticas básicas (suma, resta, multiplicación, división)",
+    title: "🧮 Mathematical Calculator",
+    description: "Performs basic mathematical operations (addition, subtraction, multiplication, division)",
     inputSchema: {
-      operacion: z.enum(["suma", "resta", "multiplicacion", "division"], {
-        description: "Tipo de operación a realizar"
+      operation: z.enum(["addition", "subtraction", "multiplication", "division"], {
+        description: "Type of operation to perform"
       }),
-      numero1: z.number({ description: "Primer número" }),
-      numero2: z.number({ description: "Segundo número" })
+      number1: z.number({ description: "First number" }),
+      number2: z.number({ description: "Second number" })
     }
   },
-  async ({ operacion, numero1, numero2 }) => {
-    let resultado: number;
-    let simbolo: string;
+  async ({ operation, number1, number2 }) => {
+    let result: number;
+    let symbol: string;
 
-    switch (operacion) {
-      case "suma":
-        resultado = numero1 + numero2;
-        simbolo = "+";
+    switch (operation) {
+      case "addition":
+        result = number1 + number2;
+        symbol = "+";
         break;
-      case "resta":
-        resultado = numero1 - numero2;
-        simbolo = "-";
+      case "subtraction":
+        result = number1 - number2;
+        symbol = "-";
         break;
-      case "multiplicacion":
-        resultado = numero1 * numero2;
-        simbolo = "×";
+      case "multiplication":
+        result = number1 * number2;
+        symbol = "×";
         break;
       case "division":
-        if (numero2 === 0) {
-          throw new Error("❌ Error: No se puede dividir por cero");
+        if (number2 === 0) {
+          throw new Error("❌ Error: Cannot divide by zero");
         }
-        resultado = numero1 / numero2;
-        simbolo = "÷";
+        result = number1 / number2;
+        symbol = "÷";
         break;
       default:
-        throw new Error(`❌ Operación no válida: ${operacion}`);
+        throw new Error(`❌ Invalid operation: ${operation}`);
     }
 
     return {
       content: [{
         type: "text",
-        text: `🧮 Resultado: ${numero1} ${simbolo} ${numero2} = ${resultado}`
+        text: `🧮 Result: ${number1} ${symbol} ${number2} = ${result}`
       }]
     };
   }
 );
 
-// 🌤️ HERRAMIENTA: CLIMA
+// 🌤️ TOOL: WEATHER
 server.registerTool(
-  "obtener_clima",
+  "get_weather",
   {
-    title: "🌤️ Información del Clima",
-    description: "Obtiene información meteorológica actual de cualquier ciudad",
+    title: "🌤️ Weather Information",
+    description: "Gets current weather information for any city",
     inputSchema: {
-      ciudad: z.string({ description: "Nombre de la ciudad" }),
-      pais: z.string({ description: "Código del país (ej: ES, US)" }).optional()
+      city: z.string({ description: "City name" }),
+      country: z.string({ description: "Country code (e.g. US, GB)" }).optional()
     }
   },
-  async ({ ciudad, pais }) => {
+  async ({ city, country }) => {
     try {
-      const clima = await weatherService.getCurrentWeather(ciudad, pais);
+      const weather = await weatherService.getCurrentWeather(city, country);
       return {
         content: [{
           type: "text",
-          text: `🌤️ Clima en ${clima.ciudad}:
-📍 Condición: ${clima.descripcion}
-🌡️ Temperatura: ${clima.temperatura}°C (sensación: ${clima.sensacionTermica}°C)
-💧 Humedad: ${clima.humedad}%
-💨 Viento: ${clima.velocidadViento} m/s`
+          text: `🌤️ Weather in ${weather.city}:
+📍 Condition: ${weather.description}
+🌡️ Temperature: ${weather.temperature}°C (feels like: ${weather.feelsLike}°C)
+💧 Humidity: ${weather.humidity}%
+💨 Wind: ${weather.windSpeed} m/s`
         }]
       };
     } catch (error) {
       return {
         content: [{
           type: "text",
-          text: `❌ Error obteniendo clima: ${error instanceof Error ? error.message : 'Error desconocido'}`
+          text: `❌ Error getting weather: ${error instanceof Error ? error.message : 'Unknown error'}`
         }],
         isError: true
       };
@@ -145,36 +156,36 @@ server.registerTool(
   }
 );
 
-// 📝 HERRAMIENTA: CREAR NOTA
+// 📝 TOOL: CREATE NOTE
 server.registerTool(
-  "crear_nota",
+  "create_note",
   {
-    title: "📝 Crear Nota",
-    description: "Crea una nueva nota con título y contenido",
+    title: "📝 Create Note",
+    description: "Creates a new note with title and content",
     inputSchema: {
-      titulo: z.string({ description: "Título de la nota" }),
-      contenido: z.string({ description: "Contenido de la nota" }),
-      categoria: z.string({ description: "Categoría de la nota" }).optional()
+      title: z.string({ description: "Note title" }),
+      content: z.string({ description: "Note content" }),
+      category: z.string({ description: "Note category" }).optional()
     }
   },
-  async ({ titulo, contenido, categoria }) => {
+  async ({ title, content, category }) => {
     try {
-      const nota = await notesService.createNote(titulo, contenido, categoria);
+      const note = await notesService.createNote(title, content, category);
       return {
         content: [{
           type: "text",
-          text: `📝 Nota creada exitosamente:
-🆔 ID: ${nota.id}
-📋 Título: ${nota.titulo}
-📁 Categoría: ${nota.categoria || 'Sin categoría'}
-📅 Creada: ${nota.fechaCreacion}`
+          text: `📝 Note created successfully:
+🆔 ID: ${note.id}
+📋 Title: ${note.title}
+📁 Category: ${note.category || 'Uncategorized'}
+📅 Created: ${note.creationDate}`
         }]
       };
     } catch (error) {
       return {
         content: [{
           type: "text",
-          text: `❌ Error creando nota: ${error instanceof Error ? error.message : 'Error desconocido'}`
+          text: `❌ Error creating note: ${error instanceof Error ? error.message : 'Unknown error'}`
         }],
         isError: true
       };
@@ -182,49 +193,49 @@ server.registerTool(
   }
 );
 
-// 🔍 HERRAMIENTA: BUSCAR NOTAS
+// 🔍 TOOL: SEARCH NOTES
 server.registerTool(
-  "buscar_notas",
+  "search_notes",
   {
-    title: "🔍 Buscar Notas",
-    description: "Busca notas por título, contenido o categoría",
+    title: "🔍 Search Notes",
+    description: "Search notes by title, content or category",
     inputSchema: {
-      query: z.string({ description: "Término de búsqueda" }).optional(),
-      categoria: z.string({ description: "Filtrar por categoría" }).optional(),
-      limite: z.number({ description: "Número máximo de resultados" }).default(10)
+      query: z.string({ description: "Search term" }).optional(),
+      category: z.string({ description: "Filter by category" }).optional(),
+      limit: z.number({ description: "Maximum number of results" }).default(10)
     }
   },
-  async ({ query, categoria, limite }) => {
+  async ({ query, category, limit }) => {
     try {
-      const notas = await notesService.searchNotes(query, categoria, limite);
+      const notes = await notesService.searchNotes(query, category, limit);
 
-      if (notas.length === 0) {
+      if (notes.length === 0) {
         return {
           content: [{
             type: "text",
-            text: "🔍 No se encontraron notas con los criterios especificados"
+            text: "🔍 No notes found with the specified criteria"
           }]
         };
       }
 
-      const resultado = notas.map(nota =>
-        `📝 **${nota.titulo}** (ID: ${nota.id})
-📁 Categoría: ${nota.categoria || 'Sin categoría'}
-📅 ${nota.fechaCreacion}
-💬 ${nota.contenido.substring(0, 100)}${nota.contenido.length > 100 ? '...' : ''}`
+      const result = notes.map((note: any) =>
+        `📝 **${note.title}** (ID: ${note.id})
+📁 Category: ${note.category || 'Uncategorized'}
+📅 ${note.creationDate}
+💬 ${note.content.substring(0, 100)}${note.content.length > 100 ? '...' : ''}`
       ).join('\n\n');
 
       return {
         content: [{
           type: "text",
-          text: `🔍 Encontradas ${notas.length} nota(s):\n\n${resultado}`
+          text: `🔍 Found ${notes.length} note(s):\n\n${result}`
         }]
       };
     } catch (error) {
       return {
         content: [{
           type: "text",
-          text: `❌ Error buscando notas: ${error instanceof Error ? error.message : 'Error desconocido'}`
+          text: `❌ Error searching notes: ${error instanceof Error ? error.message : 'Unknown error'}`
         }],
         isError: true
       };
@@ -232,31 +243,31 @@ server.registerTool(
   }
 );
 
-// 🗄️ HERRAMIENTA: QUERY BASE DE DATOS
+// 🗄️ TOOL: DATABASE QUERY
 server.registerTool(
-  "ejecutar_sql",
+  "execute_sql",
   {
-    title: "🗄️ Ejecutar Query SQL",
-    description: "Ejecuta consultas SQL en la base de datos (solo SELECT por seguridad)",
+    title: "🗄️ Execute SQL Query",
+    description: "Executes SQL queries on the database (SELECT only for security)",
     inputSchema: {
-      sql: z.string({ description: "Consulta SQL a ejecutar (solo SELECT)" })
+      sql: z.string({ description: "SQL query to execute (SELECT only)" })
     }
   },
   async ({ sql }) => {
     try {
-      // Validación de seguridad: solo permitir SELECT
+      // Security validation: only allow SELECT
       const sqlTrimmed = sql.trim().toLowerCase();
       if (!sqlTrimmed.startsWith('select')) {
-        throw new Error("Por seguridad, solo se permiten consultas SELECT");
+        throw new Error("For security reasons, only SELECT queries are allowed");
       }
 
-      const resultados = await dbService.executeQuery(sql);
+      const results = await dbService.executeQuery(sql);
 
-      if (resultados.length === 0) {
+      if (results.length === 0) {
         return {
           content: [{
             type: "text",
-            text: "🗄️ La consulta no devolvió resultados"
+            text: "🗄️ Query returned no results"
           }]
         };
       }
@@ -264,14 +275,14 @@ server.registerTool(
       return {
         content: [{
           type: "text",
-          text: `🗄️ Resultados de la consulta:\n\`\`\`json\n${JSON.stringify(resultados, null, 2)}\n\`\`\``
+          text: `🗄️ Query results:\n\`\`\`json\n${JSON.stringify(results, null, 2)}\n\`\`\``
         }]
       };
     } catch (error) {
       return {
         content: [{
           type: "text",
-          text: `❌ Error ejecutando consulta: ${error instanceof Error ? error.message : 'Error desconocido'}`
+          text: `❌ Error executing query: ${error instanceof Error ? error.message : 'Unknown error'}`
         }],
         isError: true
       };

@@ -1,31 +1,31 @@
 /**
- * SERVICIO DE NOTAS - TUTORIAL MCP
+ * NOTES SERVICE - MCP TUTORIAL
  * 
- * Este servicio demuestra un CRUD completo usando MCP.
- * Permite crear, buscar, actualizar y eliminar notas.
+ * This service demonstrates a complete CRUD using MCP.
+ * Allows creating, searching, updating and deleting notes.
  * 
- * 📝 FUNCIONALIDADES:
- * - Crear notas con categorías
- * - Buscar notas por contenido
- * - Listar notas por categoría
- * - Validación de datos
+ * 📝 FUNCTIONALITIES:
+ * - Create notes with categories
+ * - Search notes by content
+ * - List notes by category
+ * - Data validation
  */
 
 import { DatabaseService } from '../database/database.js';
 
 export interface Note {
   id: number;
-  titulo: string;
-  contenido: string;
-  categoria?: string;
-  fechaCreacion: string;
-  fechaModificacion: string;
+  title: string;
+  content: string;
+  category?: string;
+  creationDate: string;
+  lastModified: string;
 }
 
 export interface CreateNoteRequest {
-  titulo: string;
-  contenido: string;
-  categoria?: string;
+  title: string;
+  content: string;
+  category?: string;
 }
 
 export class NotesService {
@@ -36,306 +36,312 @@ export class NotesService {
   }
 
   /**
-   * Inicializa el servicio de notas
+   * Initializes the notes service
    */
   async initialize(): Promise<void> {
-    // El servicio de base de datos ya debe estar inicializado
-    // Crear algunas notas de ejemplo si no existen
+    // The database service should already be initialized
+    // Create some example notes if they don't exist
     await this.createExampleNotes();
   }
 
   /**
-   * Crea una nueva nota
+   * Creates a new note
    */
-  async createNote(titulo: string, contenido: string, categoria?: string): Promise<Note> {
-    // Validaciones
-    if (!titulo.trim()) {
-      throw new Error("El título de la nota no puede estar vacío");
+  async createNote(title: string, content: string, category?: string): Promise<Note> {
+    // Validations
+    if (!title.trim()) {
+      throw new Error("Note title cannot be empty");
     }
 
-    if (!contenido.trim()) {
-      throw new Error("El contenido de la nota no puede estar vacío");
+    if (!content.trim()) {
+      throw new Error("Note content cannot be empty");
     }
 
-    if (titulo.length > 200) {
-      throw new Error("El título no puede tener más de 200 caracteres");
+    if (title.length > 200) {
+      throw new Error("Title cannot have more than 200 characters");
     }
 
-    if (contenido.length > 10000) {
-      throw new Error("El contenido no puede tener más de 10,000 caracteres");
+    if (content.length > 10000) {
+      throw new Error("Content cannot have more than 10,000 characters");
     }
 
     try {
       const result = await this.dbService.executeWrite(
-        `INSERT INTO notas (titulo, contenido, categoria) 
+        `INSERT INTO notes (title, content, category) 
          VALUES (?, ?, ?)`,
-        [titulo.trim(), contenido.trim(), categoria?.trim() || null]
+        [title.trim(), content.trim(), category?.trim() || null]
       );
 
       if (!result.lastID) {
-        throw new Error("Error creando la nota");
+        throw new Error("Error creating note");
       }
 
-      // Obtener la nota creada
-      const nota = await this.dbService.getOne(
-        "SELECT * FROM notas WHERE id = ?",
+      // Get the created note
+      const note = await this.dbService.getOne(
+        "SELECT * FROM notes WHERE id = ?",
         [result.lastID]
       );
 
-      return this.formatNote(nota);
+      return this.formatNote(note);
     } catch (error) {
-      throw new Error(`Error creando nota: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error creating note: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Busca notas por título, contenido o categoría
+   * Searches notes by title, content or category
    */
-  async searchNotes(query?: string, categoria?: string, limite: number = 10): Promise<Note[]> {
+  async searchNotes(query?: string, category?: string, limit: number = 10): Promise<Note[]> {
     try {
-      let sql = "SELECT * FROM notas WHERE 1=1";
+      let sql = "SELECT * FROM notes WHERE 1=1";
       const params: any[] = [];
 
-      // Filtro por query (busca en título y contenido)
+      // Filter by query (searches in title and content)
       if (query && query.trim()) {
-        sql += " AND (titulo LIKE ? OR contenido LIKE ?)";
+        sql += " AND (title LIKE ? OR content LIKE ?)";
         const searchTerm = `%${query.trim()}%`;
         params.push(searchTerm, searchTerm);
       }
 
-      // Filtro por categoría
-      if (categoria && categoria.trim()) {
-        sql += " AND categoria = ?";
-        params.push(categoria.trim());
+      // Filter by category
+      if (category && category.trim()) {
+        sql += " AND category = ?";
+        params.push(category.trim());
       }
 
-      // Ordenar por fecha de modificación (más recientes primero)
-      sql += " ORDER BY fecha_modificacion DESC";
+      // Order by modification date (most recent first)
+      sql += " ORDER BY last_modified DESC";
 
-      // Limitar resultados
-      if (limite > 0) {
+      // Limit results
+      if (limit > 0) {
         sql += " LIMIT ?";
-        params.push(limite);
+        params.push(limit);
       }
 
-      const notas = await this.dbService.executeQuery(sql);
-      return notas.map(nota => this.formatNote(nota));
+      const notes = await this.dbService.executeQuery(sql);
+      return notes.map(note => this.formatNote(note));
     } catch (error) {
-      throw new Error(`Error buscando notas: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error searching notes: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Obtiene una nota por ID
+   * Gets a note by ID
    */
   async getNoteById(id: number): Promise<Note | null> {
     try {
-      const nota = await this.dbService.getOne(
-        "SELECT * FROM notas WHERE id = ?",
+      const note = await this.dbService.getOne(
+        "SELECT * FROM notes WHERE id = ?",
         [id]
       );
 
-      return nota ? this.formatNote(nota) : null;
+      return note ? this.formatNote(note) : null;
     } catch (error) {
-      throw new Error(`Error obteniendo nota: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error getting note: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Actualiza una nota existente
+   * Updates an existing note
    */
   async updateNote(id: number, updates: Partial<CreateNoteRequest>): Promise<Note> {
     try {
-      // Verificar que la nota existe
-      const notaExistente = await this.getNoteById(id);
-      if (!notaExistente) {
-        throw new Error(`Nota con ID ${id} no encontrada`);
+      // Check that the note exists
+      const existingNote = await this.getNoteById(id);
+      if (!existingNote) {
+        throw new Error(`Note with ID ${id} not found`);
       }
 
-      // Construir consulta de actualización
-      const campos: string[] = [];
-      const valores: any[] = [];
+      // Build dynamic update query
+      const fields: string[] = [];
+      const values: any[] = [];
 
-      if (updates.titulo !== undefined) {
-        if (!updates.titulo.trim()) {
-          throw new Error("El título no puede estar vacío");
+      if (updates.title !== undefined) {
+        if (!updates.title.trim()) {
+          throw new Error("Title cannot be empty");
         }
-        if (updates.titulo.length > 200) {
-          throw new Error("El título no puede tener más de 200 caracteres");
+        if (updates.title.length > 200) {
+          throw new Error("Title cannot have more than 200 characters");
         }
-        campos.push("titulo = ?");
-        valores.push(updates.titulo.trim());
+        fields.push("title = ?");
+        values.push(updates.title.trim());
       }
 
-      if (updates.contenido !== undefined) {
-        if (!updates.contenido.trim()) {
-          throw new Error("El contenido no puede estar vacío");
+      if (updates.content !== undefined) {
+        if (!updates.content.trim()) {
+          throw new Error("Content cannot be empty");
         }
-        if (updates.contenido.length > 10000) {
-          throw new Error("El contenido no puede tener más de 10,000 caracteres");
+        if (updates.content.length > 10000) {
+          throw new Error("Content cannot have more than 10,000 characters");
         }
-        campos.push("contenido = ?");
-        valores.push(updates.contenido.trim());
+        fields.push("content = ?");
+        values.push(updates.content.trim());
       }
 
-      if (updates.categoria !== undefined) {
-        campos.push("categoria = ?");
-        valores.push(updates.categoria?.trim() || null);
+      if (updates.category !== undefined) {
+        fields.push("category = ?");
+        values.push(updates.category?.trim() || null);
       }
 
-      if (campos.length === 0) {
-        throw new Error("No hay campos para actualizar");
+      if (fields.length === 0) {
+        throw new Error("No fields to update");
       }
 
-      // Agregar fecha de modificación
-      campos.push("fecha_modificacion = CURRENT_TIMESTAMP");
-      valores.push(id);
+      // Always update modification date
+      fields.push("last_modified = CURRENT_TIMESTAMP");
+      values.push(id);
 
-      const sql = `UPDATE notas SET ${campos.join(', ')} WHERE id = ?`;
+      const sql = `UPDATE notes SET ${fields.join(", ")} WHERE id = ?`;
+      await this.dbService.executeWrite(sql, values);
 
-      const result = await this.dbService.executeWrite(sql, valores);
-
-      if (result.changes === 0) {
-        throw new Error("No se pudo actualizar la nota");
+      // Return updated note
+      const updatedNote = await this.getNoteById(id);
+      if (!updatedNote) {
+        throw new Error("Error getting updated note");
       }
 
-      // Obtener la nota actualizada
-      const notaActualizada = await this.getNoteById(id);
-      if (!notaActualizada) {
-        throw new Error("Error obteniendo la nota actualizada");
-      }
-
-      return notaActualizada;
+      return updatedNote;
     } catch (error) {
-      throw new Error(`Error actualizando nota: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error updating note: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Elimina una nota por ID
+   * Deletes a note by ID
    */
   async deleteNote(id: number): Promise<boolean> {
     try {
+      // Check that the note exists
+      const existingNote = await this.getNoteById(id);
+      if (!existingNote) {
+        throw new Error(`Note with ID ${id} not found`);
+      }
+
       const result = await this.dbService.executeWrite(
-        "DELETE FROM notas WHERE id = ?",
+        "DELETE FROM notes WHERE id = ?",
         [id]
       );
 
       return result.changes > 0;
     } catch (error) {
-      throw new Error(`Error eliminando nota: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error deleting note: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Obtiene todas las categorías únicas
+   * Gets all available categories
    */
   async getCategories(): Promise<string[]> {
     try {
-      const result = await this.dbService.executeQuery(
-        "SELECT DISTINCT categoria FROM notas WHERE categoria IS NOT NULL ORDER BY categoria"
+      const results = await this.dbService.executeQuery(
+        "SELECT DISTINCT category FROM notes WHERE category IS NOT NULL ORDER BY category"
       );
 
-      return result.map(row => row.categoria);
+      return results.map((row: any) => row.category);
     } catch (error) {
-      throw new Error(`Error obteniendo categorías: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error getting categories: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Obtiene estadísticas de las notas
+   * Gets notes statistics
    */
-  async getStats(): Promise<{
-    totalNotas: number;
-    categorias: number;
-    notaSinCategoria: number;
-    promedioCaracteres: number;
+  async getNotesStats(): Promise<{
+    total: number;
+    byCategory: { [category: string]: number };
+    recentCount: number;
   }> {
     try {
-      const totalNotas = await this.dbService.getOne(
-        "SELECT COUNT(*) as count FROM notas"
-      );
+      // Total notes
+      const totalResult = await this.dbService.getOne("SELECT COUNT(*) as total FROM notes");
+      const total = totalResult.total;
 
-      const categorias = await this.dbService.getOne(
-        "SELECT COUNT(DISTINCT categoria) as count FROM notas WHERE categoria IS NOT NULL"
-      );
+      // Notes by category
+      const categoryResults = await this.dbService.executeQuery(`
+        SELECT 
+          COALESCE(category, 'Uncategorized') as category,
+          COUNT(*) as count 
+        FROM notes 
+        GROUP BY category 
+        ORDER BY count DESC
+      `);
 
-      const sinCategoria = await this.dbService.getOne(
-        "SELECT COUNT(*) as count FROM notas WHERE categoria IS NULL"
-      );
+      const byCategory: { [category: string]: number } = {};
+      categoryResults.forEach((row: any) => {
+        byCategory[row.category] = row.count;
+      });
 
-      const promedio = await this.dbService.getOne(
-        "SELECT AVG(LENGTH(contenido)) as promedio FROM notas"
-      );
+      // Recent notes (last 7 days)
+      const recentResult = await this.dbService.getOne(`
+        SELECT COUNT(*) as count 
+        FROM notes 
+        WHERE creation_date >= datetime('now', '-7 days')
+      `);
+      const recentCount = recentResult.count;
 
       return {
-        totalNotas: totalNotas.count,
-        categorias: categorias.count,
-        notaSinCategoria: sinCategoria.count,
-        promedioCaracteres: Math.round(promedio.promedio || 0)
+        total,
+        byCategory,
+        recentCount
       };
     } catch (error) {
-      throw new Error(`Error obteniendo estadísticas: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error getting statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Formatea una nota de la base de datos
-   */
-  private formatNote(nota: any): Note {
-    return {
-      id: nota.id,
-      titulo: nota.titulo,
-      contenido: nota.contenido,
-      categoria: nota.categoria,
-      fechaCreacion: new Date(nota.fecha_creacion).toISOString(),
-      fechaModificacion: new Date(nota.fecha_modificacion).toISOString()
-    };
-  }
-
-  /**
-   * Crea notas de ejemplo para demostración
+   * Creates some example notes if the table is empty
    */
   private async createExampleNotes(): Promise<void> {
     try {
-      // Verificar si ya hay notas
-      const existingNotes = await this.dbService.getOne("SELECT COUNT(*) as count FROM notas");
-
+      const existingNotes = await this.dbService.getOne("SELECT COUNT(*) as count FROM notes");
+      
       if (existingNotes.count === 0) {
-        const ejemplos = [
+        const exampleNotes = [
           {
-            titulo: "Bienvenido a MCP",
-            contenido: "Este es tu primer sistema de notas usando Model Context Protocol.\n\nPuedes crear, buscar y gestionar notas usando comandos de chat natural.\n\nPrueba comandos como:\n- 'Crea una nota sobre mi reunión'\n- 'Busca notas sobre MCP'\n- 'Muestra todas mis notas de trabajo'",
-            categoria: "Tutorial"
+            title: "Welcome to Notes",
+            content: "This is your first note! You can create, edit, search and organize your notes by categories.",
+            category: "Tutorial"
           },
           {
-            titulo: "Ideas para el proyecto",
-            contenido: "Lista de ideas para mejorar este tutorial:\n\n1. Agregar más herramientas MCP\n2. Implementar autenticación\n3. Añadir notificaciones en tiempo real\n4. Crear API REST completa\n5. Agregar tests automatizados\n\nRecordar: Mantener el código simple y bien documentado.",
-            categoria: "Desarrollo"
+            title: "Project Ideas",
+            content: "List of project ideas to work on:\n1. Task manager app\n2. Weather widget\n3. Recipe organizer\n4. Expense tracker",
+            category: "Projects"
           },
           {
-            titulo: "Comandos útiles",
-            contenido: "Comandos de terminal útiles para desarrollo:\n\n```bash\nnpm run dev          # Ejecutar en modo desarrollo\nnpm run build        # Compilar TypeScript\nnpm test             # Ejecutar tests\nnpm run clean        # Limpiar archivos compilados\n```\n\nRecordar configurar las variables de entorno antes de ejecutar.",
-            categoria: "Referencia"
+            title: "Daily Goals",
+            content: "Today's goals:\n- ✅ Complete documentation\n- 📚 Learn TypeScript\n- 🏃 Go for a run\n- 📧 Answer emails",
+            category: "Personal"
           },
           {
-            titulo: "Lista de tareas",
-            contenido: "Tareas pendientes:\n\n- [x] Configurar servidor MCP\n- [x] Implementar herramientas básicas\n- [x] Crear base de datos\n- [ ] Agregar autenticación\n- [ ] Mejorar interfaz de usuario\n- [ ] Escribir documentación completa\n- [ ] Crear videos tutoriales",
-            categoria: "Tareas"
+            title: "Book Recommendations",
+            content: "Books to read:\n- 'Clean Code' by Robert Martin\n- 'Design Patterns' by Gang of Four\n- 'The Pragmatic Programmer' by Hunt & Thomas",
+            category: "Learning"
           }
         ];
 
-        for (const ejemplo of ejemplos) {
-          await this.dbService.executeWrite(
-            `INSERT INTO notas (titulo, contenido, categoria) VALUES (?, ?, ?)`,
-            [ejemplo.titulo, ejemplo.contenido, ejemplo.categoria]
-          );
+        for (const note of exampleNotes) {
+          await this.createNote(note.title, note.content, note.category);
         }
 
-        console.error("✅ Notas de ejemplo creadas");
+        console.log("✅ Example notes created");
       }
     } catch (error) {
-      console.error("⚠️ Error creando notas de ejemplo:", error);
+      console.error("⚠️ Error creating example notes:", error);
     }
+  }
+
+  /**
+   * Formats a database row to Note interface
+   */
+  private formatNote(note: any): Note {
+    return {
+      id: note.id,
+      title: note.title,
+      content: note.content,
+      category: note.category,
+      creationDate: note.creation_date,
+      lastModified: note.last_modified
+    };
   }
 }

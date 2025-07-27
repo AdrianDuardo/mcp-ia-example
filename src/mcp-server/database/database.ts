@@ -1,14 +1,14 @@
 /**
- * SERVICIO DE BASE DE DATOS - TUTORIAL MCP
+ * DATABASE SERVICE - MCP TUTORIAL
  * 
- * Este servicio maneja toda la interacción con SQLite.
- * Demuestra cómo MCP puede acceder a bases de datos de forma segura.
+ * This service handles all SQLite interaction.
+ * Demonstrates how MCP servers can access databases safely.
  * 
- * 🔑 CONCEPTOS CLAVE:
- * - Inicialización automática de esquemas
- * - Validación de consultas por seguridad
- * - Estadísticas de tablas
- * - Manejo de errores robusto
+ * 🔑 KEY CONCEPTS:
+ * - Automatic schema initialization
+ * - Query validation for security
+ * - Table statistics
+ * - Robust error handling
  */
 
 import { open, Database } from 'sqlite';
@@ -17,11 +17,11 @@ import { promises as fs } from 'fs';
 import path from 'path';
 
 export interface TableStats {
-  tabla: string;
-  totalFilas: number;
-  columnas: string[];
-  tamaño: string;
-  ultimaModificacion: string;
+  table: string;
+  totalRows: number;
+  columns: string[];
+  size: string;
+  lastModified: string;
 }
 
 export class DatabaseService {
@@ -29,128 +29,130 @@ export class DatabaseService {
   private dbPath: string;
 
   constructor() {
-    // Crear directorio de datos si no existe
+    // Create data directory if it doesn't exist
     this.dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'tutorial.sqlite');
   }
 
   /**
-   * Inicializa la base de datos y crea las tablas necesarias
+   * Initializes the database and creates necessary tables
    */
   async initialize(): Promise<void> {
     try {
-      // Crear directorio si no existe
+      // Create directory if it doesn't exist
       await fs.mkdir(path.dirname(this.dbPath), { recursive: true });
 
-      // Abrir conexión a la base de datos
+      // Open database connection
       this.db = await open({
         filename: this.dbPath,
         driver: sqlite3.Database
       });
 
-      // Crear tablas de ejemplo
+      // Create example tables
       await this.createTables();
 
-      // Insertar datos de ejemplo
+      // Insert sample data
       await this.insertSampleData();
 
-      console.error("✅ Base de datos SQLite inicializada correctamente");
+      console.error("✅ SQLite database initialized successfully");
     } catch (error) {
-      throw new Error(`Error inicializando base de datos: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error initializing database: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Crea las tablas de ejemplo para demostrar funcionalidad MCP
+   * Creates example tables to demonstrate MCP functionality
    */
   private async createTables(): Promise<void> {
-    if (!this.db) throw new Error("Base de datos no inicializada");
+    if (!this.db) throw new Error("Database not initialized");
 
-    // Tabla de usuarios
+    // Users table
     await this.db.exec(`
-      CREATE TABLE IF NOT EXISTS usuarios (
+      CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
+        name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
-        edad INTEGER,
-        ciudad TEXT,
-        fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+        age INTEGER,
+        city TEXT,
+        registration_date DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // Tabla de productos
+    // Products table
     await this.db.exec(`
-      CREATE TABLE IF NOT EXISTS productos (
+      CREATE TABLE IF NOT EXISTS products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        categoria TEXT NOT NULL,
-        precio DECIMAL(10,2) NOT NULL,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        price DECIMAL(10,2) NOT NULL,
         stock INTEGER DEFAULT 0,
-        descripcion TEXT,
-        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+        description TEXT,
+        creation_date DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // Tabla de ventas
+    // Sales table
     await this.db.exec(`
-      CREATE TABLE IF NOT EXISTS ventas (
+      CREATE TABLE IF NOT EXISTS sales (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER,
-        producto_id INTEGER,
-        cantidad INTEGER NOT NULL,
-        precio_total DECIMAL(10,2) NOT NULL,
-        fecha_venta DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-        FOREIGN KEY (producto_id) REFERENCES productos(id)
+        user_id INTEGER,
+        product_id INTEGER,
+        quantity INTEGER NOT NULL,
+        total_price DECIMAL(10,2) NOT NULL,
+        sale_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        FOREIGN KEY (product_id) REFERENCES products(id)
       )
     `);
 
-    // Tabla de notas (para el servicio de notas)
+    // Notes table (for notes service)
     await this.db.exec(`
-      CREATE TABLE IF NOT EXISTS notas (
+      CREATE TABLE IF NOT EXISTS notes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        titulo TEXT NOT NULL,
-        contenido TEXT NOT NULL,
-        categoria TEXT,
-        fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-        fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP
+        title TEXT NOT NULL,
+        content TEXT NOT NULL,
+        category TEXT,
+        creation_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        last_modified DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    console.log("Tables created successfully");
   }
 
   /**
-   * Inserta datos de ejemplo si las tablas están vacías
+   * Inserts sample data if tables are empty
    */
   private async insertSampleData(): Promise<void> {
     if (!this.db) return;
 
     try {
-      // Verificar si ya hay datos
-      const userCount = await this.db.get("SELECT COUNT(*) as count FROM usuarios");
+      // Check if there's already data
+      const userCount = await this.db.get("SELECT COUNT(*) as count FROM users");
 
       if (userCount.count === 0) {
-        // Insertar usuarios de ejemplo
+        // Insert sample users
         await this.db.exec(`
-          INSERT INTO usuarios (nombre, email, edad, ciudad) VALUES
-          ('Ana García', 'ana@email.com', 28, 'Madrid'),
-          ('Carlos López', 'carlos@email.com', 35, 'Barcelona'),
-          ('María Rodríguez', 'maria@email.com', 31, 'Valencia'),
-          ('David Martín', 'david@email.com', 29, 'Sevilla'),
-          ('Laura Sánchez', 'laura@email.com', 26, 'Bilbao')
+          INSERT INTO users (name, email, age, city) VALUES
+          ('Ana Garcia', 'ana@email.com', 28, 'Madrid'),
+          ('Carlos Lopez', 'carlos@email.com', 35, 'Barcelona'),
+          ('María Rodriguez', 'maria@email.com', 31, 'Valencia'),
+          ('David Martin', 'david@email.com', 29, 'Sevilla'),
+          ('Laura Sanchez', 'laura@email.com', 26, 'Bilbao')
         `);
 
-        // Insertar productos de ejemplo
+        // Insert sample products
         await this.db.exec(`
-          INSERT INTO productos (nombre, categoria, precio, stock, descripcion) VALUES
-          ('Laptop Dell XPS 13', 'Electrónicos', 1299.99, 15, 'Laptop ultraligera con procesador Intel i7'),
-          ('iPhone 15 Pro', 'Electrónicos', 999.99, 25, 'Smartphone con cámara profesional'),
-          ('Mesa de Oficina', 'Muebles', 199.99, 8, 'Mesa ergonómica para trabajo'),
-          ('Silla Gaming', 'Muebles', 299.99, 12, 'Silla cómoda para largas sesiones'),
-          ('Monitor 4K', 'Electrónicos', 449.99, 18, 'Monitor profesional de 27 pulgadas')
+          INSERT INTO products (name, category, price, stock, description) VALUES
+          ('Dell XPS 13 Laptop', 'Electronics', 1299.99, 15, 'Ultra-light laptop with Intel i7 processor'),
+          ('iPhone 15 Pro', 'Electronics', 999.99, 25, 'Smartphone with professional camera'),
+          ('Office Desk', 'Furniture', 199.99, 8, 'Ergonomic desk for work'),
+          ('Gaming Chair', 'Furniture', 299.99, 12, 'Comfortable chair for long sessions'),
+          ('4K Monitor', 'Electronics', 449.99, 18, '27-inch professional monitor')
         `);
 
-        // Insertar algunas ventas de ejemplo
+        // Insert sample sales
         await this.db.exec(`
-          INSERT INTO ventas (usuario_id, producto_id, cantidad, precio_total) VALUES
+          INSERT INTO sales (user_id, product_id, quantity, total_price) VALUES
           (1, 1, 1, 1299.99),
           (2, 2, 1, 999.99),
           (3, 3, 2, 399.98),
@@ -158,81 +160,81 @@ export class DatabaseService {
           (4, 5, 1, 449.99)
         `);
 
-        console.error("✅ Datos de ejemplo insertados en la base de datos");
+        console.error("✅ Sample data inserted into database");
       }
     } catch (error) {
-      console.error("⚠️ Error insertando datos de ejemplo:", error);
+      console.error("⚠️ Error inserting sample data:", error);
     }
   }
 
   /**
-   * Ejecuta una consulta SQL (solo SELECT por seguridad)
+   * Executes an SQL query (SELECT only for security)
    */
   async executeQuery(sql: string): Promise<any[]> {
-    if (!this.db) throw new Error("Base de datos no inicializada");
+    if (!this.db) throw new Error("Database not initialized");
 
-    // Validación de seguridad
+    // Security validation
     const sqlTrimmed = sql.trim().toLowerCase();
     if (!sqlTrimmed.startsWith('select')) {
-      throw new Error("Por seguridad, solo se permiten consultas SELECT");
+      throw new Error("For security reasons, only SELECT queries are allowed");
     }
 
     try {
-      const resultados = await this.db.all(sql);
-      return resultados;
+      const results = await this.db.all(sql);
+      return results;
     } catch (error) {
-      throw new Error(`Error ejecutando consulta: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error executing query: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Obtiene estadísticas de una tabla
+   * Gets table statistics
    */
-  async getTableStats(tabla: string): Promise<TableStats> {
-    if (!this.db) throw new Error("Base de datos no inicializada");
+  async getTableStats(table: string): Promise<TableStats> {
+    if (!this.db) throw new Error("Database not initialized");
 
     try {
-      // Validar que la tabla existe
+      // Validate that table exists
       const tableExists = await this.db.get(
         "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-        [tabla]
+        [table]
       );
 
       if (!tableExists) {
-        throw new Error(`La tabla '${tabla}' no existe`);
+        throw new Error(`Table '${table}' does not exist`);
       }
 
-      // Obtener número de filas
-      const rowCount = await this.db.get(`SELECT COUNT(*) as count FROM ${tabla}`);
+      // Get row count
+      const rowCount = await this.db.get(`SELECT COUNT(*) as count FROM ${table}`);
 
-      // Obtener información de columnas
-      const columns = await this.db.all(`PRAGMA table_info(${tabla})`);
+      // Get column information
+      const columns = await this.db.all(`PRAGMA table_info(${table})`);
       const columnNames = columns.map((col: any) => col.name);
 
-      // Obtener tamaño de la tabla (aproximado)
+      // Get table size (approximate)
       const stats = await this.db.get(`
         SELECT 
           page_count * page_size as size
-        FROM pragma_page_count('${tabla}'), pragma_page_size()
+        FROM pragma_page_count('${table}'), pragma_page_size()
       `);
 
       return {
-        tabla,
-        totalFilas: rowCount.count,
-        columnas: columnNames,
-        tamaño: `${Math.round((stats?.size || 0) / 1024)} KB`,
-        ultimaModificacion: new Date().toISOString()
+        table,
+        totalRows: rowCount.count,
+        columns: columnNames,
+        size: `${Math.round((stats?.size || 0) / 1024)} KB`,
+        lastModified: new Date().toISOString()
       };
     } catch (error) {
-      throw new Error(`Error obteniendo estadísticas: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error getting statistics: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Lista todas las tablas disponibles
+   * Lists all available tables
    */
   async getTables(): Promise<string[]> {
-    if (!this.db) throw new Error("Base de datos no inicializada");
+    if (!this.db) throw new Error("Database not initialized");
 
     try {
       const tables = await this.db.all(
@@ -240,46 +242,46 @@ export class DatabaseService {
       );
       return tables.map((table: any) => table.name);
     } catch (error) {
-      throw new Error(`Error obteniendo tablas: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error getting tables: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Ejecuta una consulta para insertar/actualizar (usado internamente por otros servicios)
+   * Executes a query for insert/update (used internally by other services)
    */
   async executeWrite(sql: string, params: any[] = []): Promise<any> {
-    if (!this.db) throw new Error("Base de datos no inicializada");
+    if (!this.db) throw new Error("Database not initialized");
 
     try {
       const result = await this.db.run(sql, params);
       return result;
     } catch (error) {
-      throw new Error(`Error ejecutando escritura: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error executing write: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Obtiene una fila específica
+   * Gets a specific row
    */
   async getOne(sql: string, params: any[] = []): Promise<any> {
-    if (!this.db) throw new Error("Base de datos no inicializada");
+    if (!this.db) throw new Error("Database not initialized");
 
     try {
       const result = await this.db.get(sql, params);
       return result;
     } catch (error) {
-      throw new Error(`Error obteniendo registro: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+      throw new Error(`Error getting record: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * Cierra la conexión a la base de datos
+   * Closes the database connection
    */
   async close(): Promise<void> {
     if (this.db) {
       await this.db.close();
       this.db = null;
-      console.error("✅ Conexión a base de datos cerrada");
+      console.error("✅ Database connection closed");
     }
   }
 }
