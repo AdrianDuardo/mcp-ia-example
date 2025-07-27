@@ -38,7 +38,7 @@ const server = new McpServer({
 const dbService = new DatabaseService();
 const weatherService = new WeatherService();
 const fileService = new FileService();
-const notesService = new NotesService();
+const notesService = new NotesService(dbService);
 
 /**
  * PASO 2: DEFINIR HERRAMIENTAS (TOOLS)

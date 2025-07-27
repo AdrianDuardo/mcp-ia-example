@@ -31,8 +31,8 @@ export interface CreateNoteRequest {
 export class NotesService {
   private dbService: DatabaseService;
 
-  constructor() {
-    this.dbService = new DatabaseService();
+  constructor(dbService: DatabaseService) {
+    this.dbService = dbService;
   }
 
   /**
@@ -326,7 +326,10 @@ export class NotesService {
         ];
 
         for (const ejemplo of ejemplos) {
-          await this.createNote(ejemplo.titulo, ejemplo.contenido, ejemplo.categoria);
+          await this.dbService.executeWrite(
+            `INSERT INTO notas (titulo, contenido, categoria) VALUES (?, ?, ?)`,
+            [ejemplo.titulo, ejemplo.contenido, ejemplo.categoria]
+          );
         }
 
         console.error("✅ Notas de ejemplo creadas");
