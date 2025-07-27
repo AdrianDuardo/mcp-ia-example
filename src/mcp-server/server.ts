@@ -575,6 +575,123 @@ server.registerTool(
  * - Dynamic: change based on parameters
  */
 
+// 📋 STATIC RESOURCE: Database Schema
+server.registerResource(
+  "db-schema",
+  "mcp://database/schema",
+  {
+    title: "📋 Database Schema",
+    description: "Complete database schema with all tables and columns",
+    mimeType: "application/json"
+  },
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: JSON.stringify({
+        tables: {
+          users: {
+            columns: ["id", "name", "email", "age", "city", "registration_date"],
+            description: "User information table",
+            primaryKey: "id",
+            sample: "SELECT * FROM users LIMIT 5",
+            spanishName: "usuarios",
+            columnTranslations: {
+              "nombre": "name",
+              "correo": "email",
+              "edad": "age",
+              "ciudad": "city",
+              "fecha_registro": "registration_date"
+            }
+          },
+          products: {
+            columns: ["id", "name", "category", "price", "stock", "description", "creation_date"],
+            description: "Product catalog table",
+            primaryKey: "id",
+            sample: "SELECT * FROM products LIMIT 5",
+            spanishName: "productos",
+            columnTranslations: {
+              "nombre": "name",
+              "categoria": "category",
+              "precio": "price",
+              "inventario": "stock",
+              "descripcion": "description",
+              "fecha_creacion": "creation_date"
+            }
+          },
+          sales: {
+            columns: ["id", "user_id", "product_id", "quantity", "total_price", "sale_date"],
+            description: "Sales transactions table",
+            primaryKey: "id",
+            foreignKeys: {
+              user_id: "users.id",
+              product_id: "products.id"
+            },
+            sample: "SELECT * FROM sales LIMIT 5",
+            spanishName: "ventas",
+            columnTranslations: {
+              "usuario_id": "user_id",
+              "producto_id": "product_id",
+              "cantidad": "quantity",
+              "precio_total": "total_price",
+              "fecha_venta": "sale_date"
+            }
+          },
+          notes: {
+            columns: ["id", "title", "content", "category", "creation_date", "last_modified"],
+            description: "Notes storage table",
+            primaryKey: "id",
+            sample: "SELECT * FROM notes LIMIT 5",
+            spanishName: "notas",
+            columnTranslations: {
+              "titulo": "title",
+              "contenido": "content",
+              "categoria": "category",
+              "fecha_creacion": "creation_date",
+              "ultima_modificacion": "last_modified"
+            }
+          }
+        },
+        translations: {
+          spanish_to_english: {
+            tables: {
+              "usuarios": "users",
+              "ventas": "sales",
+              "productos": "products",
+              "notas": "notes"
+            },
+            columns: {
+              "nombre": "name",
+              "correo": "email",
+              "edad": "age",
+              "ciudad": "city",
+              "precio": "price",
+              "categoria": "category",
+              "cantidad": "quantity",
+              "fecha": "date",
+              "titulo": "title",
+              "contenido": "content",
+              "descripcion": "description",
+              "inventario": "stock"
+            }
+          }
+        },
+        commonQueries: {
+          "list all users": "SELECT * FROM users",
+          "listar todos los usuarios": "SELECT * FROM users",
+          "user count": "SELECT COUNT(*) as total_users FROM users",
+          "contar usuarios": "SELECT COUNT(*) as total_users FROM users",
+          "products by category": "SELECT category, COUNT(*) as count FROM products GROUP BY category",
+          "productos por categoría": "SELECT category, COUNT(*) as count FROM products GROUP BY category",
+          "recent sales": "SELECT s.*, u.name as user_name, p.name as product_name FROM sales s JOIN users u ON s.user_id = u.id JOIN products p ON s.product_id = p.id ORDER BY sale_date DESC LIMIT 10",
+          "ventas recientes": "SELECT s.*, u.name as user_name, p.name as product_name FROM sales s JOIN users u ON s.user_id = u.id JOIN products p ON s.product_id = p.id ORDER BY sale_date DESC LIMIT 10",
+          "top selling products": "SELECT p.name, SUM(s.quantity) as total_sold FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.id, p.name ORDER BY total_sold DESC",
+          "productos más vendidos": "SELECT p.name, SUM(s.quantity) as total_sold FROM products p JOIN sales s ON p.id = s.product_id GROUP BY p.id, p.name ORDER BY total_sold DESC"
+        }
+      }, null, 2)
+    }]
+  })
+);
+
 // 📊 STATIC RESOURCE: Server information
 server.registerResource(
   "server-info",
@@ -745,7 +862,7 @@ async function initializeServer() {
 
     console.error("🎉 MCP server started successfully!");
     console.error("📋 Available tools: calculator, weather, notes (CRUD), files (CRUD), SQL");
-    console.error("📊 Available resources: server info, files, DB statistics");
+    console.error("📊 Available resources: server info, DB schema, files, DB statistics");
     console.error("💬 Available prompts: data analysis, weather report");
 
   } catch (error) {

@@ -64,7 +64,8 @@ export class ChatService {
       }
 
       // 3. GENERATE RESPONSE WITH OPENAI
-      const systemPrompt = this.buildSystemPrompt(mcpResults);
+      // Build system prompt with database context
+      const systemPrompt = await this.buildSystemPrompt(mcpResults);
       const assistantResponse = await this.generateOpenAIResponse(
         userMessage,
         systemPrompt,
@@ -168,8 +169,17 @@ Examples:
 - For "weather in Madrid":
 {"needsMCPTools": true, "suggestedTools": [{"name": "get_weather", "arguments": {"city": "Madrid"}}], "category": "weather"}
 
-- For "show database users":
+- For "show database users" or "mostrar usuarios":
 {"needsMCPTools": true, "suggestedTools": [{"name": "execute_sql", "arguments": {"sql": "SELECT * FROM users"}}], "category": "database"}
+
+- For "¿cuáles son las ventas?" or "show me sales":
+{"needsMCPTools": true, "suggestedTools": [{"name": "execute_sql", "arguments": {"sql": "SELECT * FROM sales"}}], "category": "database"}
+
+- For "productos por categoría" or "products by category":
+{"needsMCPTools": true, "suggestedTools": [{"name": "execute_sql", "arguments": {"sql": "SELECT category, COUNT(*) as count FROM products GROUP BY category"}}], "category": "database"}
+
+- For "usuarios de Madrid" or "users from Madrid":
+{"needsMCPTools": true, "suggestedTools": [{"name": "execute_sql", "arguments": {"sql": "SELECT * FROM users WHERE city = 'Madrid'"}}], "category": "database"}
 
 - For "get note 5" or "show note with id 5":
 {"needsMCPTools": true, "suggestedTools": [{"name": "get_note", "arguments": {"id": 5}}], "category": "notes"}
@@ -295,7 +305,42 @@ Examples:
   /**
    * Builds system prompt with MCP context
    */
-  private buildSystemPrompt(mcpResults: string): string {
+  private async buildSystemPrompt(mcpResults: string): Promise<string> {
+    let databaseContext = '';
+
+    try {
+      // Get database schema information
+      const schema = await this.mcpClient.readResource('mcp://database/schema');
+      if (schema && schema.contents && schema.contents[0]) {
+        const schemaData = JSON.parse(schema.contents[0].text);
+        databaseContext = `
+DATABASE SCHEMA:
+Available tables and their columns:
+${Object.entries(schemaData.tables).map(([tableName, tableInfo]: [string, any]) =>
+          `- ${tableName} (Spanish: ${tableInfo.spanishName}): ${tableInfo.columns.join(', ')} (${tableInfo.description})`
+        ).join('\n')}
+
+AUTOMATIC TRANSLATIONS:
+Spanish to English table names:
+${Object.entries(schemaData.translations.spanish_to_english.tables).map(([spanish, english]) =>
+          `- "${spanish}" → "${english}"`
+        ).join('\n')}
+
+Spanish to English column names:
+${Object.entries(schemaData.translations.spanish_to_english.columns).map(([spanish, english]) =>
+          `- "${spanish}" → "${english}"`
+        ).join('\n')}
+
+Common queries examples (both languages):
+${Object.entries(schemaData.commonQueries).map(([desc, query]) =>
+          `- ${desc}: ${query}`
+        ).join('\n')}
+`;
+      }
+    } catch (error) {
+      console.warn('Could not load database schema:', error);
+    }
+
     return `You are an intelligent assistant that can use MCP (Model Context Protocol) tools to help users.
 
 AVAILABLE TOOLS:
@@ -305,18 +350,66 @@ AVAILABLE TOOLS:
 - Files: for reading, writing and managing files
 - Database: for SQL queries
 
+${databaseContext}
+
 INSTRUCTIONS:
 1. ALWAYS respond in the SAME LANGUAGE that the user is writing to you
    - If the user writes in Spanish, respond in Spanish
    - If the user writes in English, respond in English
    - If the user writes in French, respond in French
    - Match the user's language exactly
-2. Respond naturally and friendly
-3. If MCP tools were executed, integrate the results in your response
-4. Explain what you did and the results obtained
-5. If there were errors, explain them comprehensibly
-6. Offer additional suggestions when appropriate
-7. Maintain a conversational and helpful tone
+
+2. When users ask about database information, AUTOMATICALLY TRANSLATE table and column names:
+   SPANISH to ENGLISH translations for tables:
+   - "usuarios" → "users"
+   - "ventas" → "sales" 
+   - "productos" → "products"
+   - "notas" → "notes"
+   
+   SPANISH to ENGLISH translations for common columns:
+   - "nombre" → "name"
+   - "correo/email" → "email"
+   - "edad" → "age"
+   - "ciudad" → "city"
+   - "precio" → "price"
+   - "categoria" → "category"
+   - "cantidad" → "quantity"
+   - "fecha" → "date"
+   - "titulo" → "title"
+   - "contenido" → "content"
+   - "descripcion" → "description"
+   - "stock/inventario" → "stock"
+   
+   ENGLISH to SPANISH translations (reverse):
+   - "users" → "usuarios"
+   - "sales" → "ventas"
+   - "products" → "productos" 
+   - "notes" → "notas"
+   - "name" → "nombre"
+   - "email" → "correo"
+   - "age" → "edad"
+   - "city" → "ciudad"
+   - "price" → "precio"
+   - "category" → "categoría"
+   - "quantity" → "cantidad"
+
+3. EXAMPLES of automatic translation:
+   - "¿Cuáles son las ventas?" → Use "sales" table in SQL → Respond in Spanish
+   - "Muestra los usuarios de Madrid" → Use "users" table with "city" column → Respond in Spanish
+   - "Show me products by category" → Use "products" table with "category" column → Respond in English
+
+4. For database queries, always:
+   - Translate user terms to correct English table/column names
+   - Use the schema above to construct proper SQL queries
+   - Find relevant columns and provide meaningful results
+   - Translate results back to user's language in the response
+
+5. Respond naturally and friendly
+6. If MCP tools were executed, integrate the results in your response
+7. Explain what you did and the results obtained
+8. If there were errors, explain them comprehensibly
+9. Offer additional suggestions when appropriate
+10. Maintain a conversational and helpful tone
 
 ${mcpResults ? `TOOL RESULTS:\n${mcpResults}` : ''}
 
