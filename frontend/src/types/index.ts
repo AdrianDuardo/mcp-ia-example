@@ -49,6 +49,23 @@ export interface MCPTool {
   inputSchema: Record<string, unknown>;
 }
 
+// === NOTES TYPES ===
+
+export interface Note {
+  id: number;
+  title: string;
+  content: string;
+  category?: string;
+  creationDate: string;
+  lastModified: string;
+}
+
+export interface CreateNoteRequest {
+  title: string;
+  content: string;
+  category?: string;
+}
+
 export interface MCPResource {
   uri: string;
   name: string;

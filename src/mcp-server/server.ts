@@ -26,6 +26,7 @@ import { DatabaseService } from "./database/database.js";
 import { WeatherService } from "./services/weather.js";
 import { FileService } from "./services/files.js";
 import { NotesService } from "./services/notes.js";
+import { Note } from "../shared/types.js";
 
 /**
  * STEP 1: CREATE THE MCP SERVER
@@ -207,7 +208,7 @@ server.registerTool(
         };
       }
 
-      const result = notes.map((note: any) =>
+      const result = notes.map((note: Note) =>
         `📝 **${note.title}** (ID: ${note.id})
 📁 Category: ${note.category || 'Uncategorized'}
 📅 ${note.creationDate}

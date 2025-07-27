@@ -278,16 +278,21 @@ AVAILABLE TOOLS:
 - Files: for reading system files
 
 INSTRUCTIONS:
-1. Respond naturally and friendly
-2. If MCP tools were executed, integrate the results in your response
-3. Explain what you did and the results obtained
-4. If there were errors, explain them comprehensibly
-5. Offer additional suggestions when appropriate
-6. Maintain a conversational and helpful tone
+1. ALWAYS respond in the SAME LANGUAGE that the user is writing to you
+   - If the user writes in Spanish, respond in Spanish
+   - If the user writes in English, respond in English
+   - If the user writes in French, respond in French
+   - Match the user's language exactly
+2. Respond naturally and friendly
+3. If MCP tools were executed, integrate the results in your response
+4. Explain what you did and the results obtained
+5. If there were errors, explain them comprehensibly
+6. Offer additional suggestions when appropriate
+7. Maintain a conversational and helpful tone
 
 ${mcpResults ? `TOOL RESULTS:\n${mcpResults}` : ''}
 
-Respond based on available information and obtained results.`;
+Respond based on available information and obtained results, ALWAYS in the same language as the user's message.`;
   }
 
   /**

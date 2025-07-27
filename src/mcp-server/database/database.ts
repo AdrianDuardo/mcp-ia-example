@@ -275,6 +275,26 @@ export class DatabaseService {
   }
 
   /**
+   * Gets multiple rows with parameters
+   */
+  async getMany(sql: string, params: any[] = []): Promise<any[]> {
+    if (!this.db) throw new Error("Database not initialized");
+
+    // Validate that it's a SELECT query
+    const trimmedSql = sql.trim().toUpperCase();
+    if (!trimmedSql.startsWith('SELECT')) {
+      throw new Error('Only SELECT queries are allowed');
+    }
+
+    try {
+      const results = await this.db.all(sql, params);
+      return results || [];
+    } catch (error) {
+      throw new Error(`Error executing query: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Closes the database connection
    */
   async close(): Promise<void> {

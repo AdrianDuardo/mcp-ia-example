@@ -12,21 +12,7 @@
  */
 
 import { DatabaseService } from '../database/database.js';
-
-export interface Note {
-  id: number;
-  title: string;
-  content: string;
-  category?: string;
-  creationDate: string;
-  lastModified: string;
-}
-
-export interface CreateNoteRequest {
-  title: string;
-  content: string;
-  category?: string;
-}
+import { Note, CreateNoteRequest } from '../../shared/types.js';
 
 export class NotesService {
   private dbService: DatabaseService;
@@ -89,37 +75,38 @@ export class NotesService {
   }
 
   /**
-   * Searches notes by title, content or category
+   * Searches notes by content, title or tags
    */
-  async searchNotes(query?: string, category?: string, limit: number = 10): Promise<Note[]> {
+  async searchNotes(searchTerm?: string, category?: string, limit?: number): Promise<Note[]> {
     try {
-      let sql = "SELECT * FROM notes WHERE 1=1";
+      let sql = 'SELECT id, title, content, category, creation_date, last_modified FROM notes';
       const params: any[] = [];
+      const conditions: string[] = [];
 
-      // Filter by query (searches in title and content)
-      if (query && query.trim()) {
-        sql += " AND (title LIKE ? OR content LIKE ?)";
-        const searchTerm = `%${query.trim()}%`;
-        params.push(searchTerm, searchTerm);
+      if (searchTerm && searchTerm.trim()) {
+        conditions.push('(title LIKE ? OR content LIKE ?)');
+        const term = `%${searchTerm.trim()}%`;
+        params.push(term, term);
       }
 
-      // Filter by category
       if (category && category.trim()) {
-        sql += " AND category = ?";
+        conditions.push('category = ?');
         params.push(category.trim());
       }
 
-      // Order by modification date (most recent first)
-      sql += " ORDER BY last_modified DESC";
+      if (conditions.length > 0) {
+        sql += ' WHERE ' + conditions.join(' AND ');
+      }
 
-      // Limit results
-      if (limit > 0) {
-        sql += " LIMIT ?";
+      sql += ' ORDER BY last_modified DESC';
+
+      if (limit && limit > 0) {
+        sql += ' LIMIT ?';
         params.push(limit);
       }
 
-      const notes = await this.dbService.executeQuery(sql);
-      return notes.map(note => this.formatNote(note));
+      const notes = await this.dbService.getMany(sql, params);
+      return notes.map(this.formatNote);
     } catch (error) {
       throw new Error(`Error searching notes: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
